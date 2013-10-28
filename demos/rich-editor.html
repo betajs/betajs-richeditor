@@ -1,0 +1,56 @@
+<html lang="en">
+	<head>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script src="assets/beta.min.js"></script>
+		<link  href="assets/beta-ui.min.css" rel="stylesheet" />		
+		<script src="../dist/betajs-richeditor.js"></script>
+		<link  href="../dist/betajs-richeditor.css" rel="stylesheet" />
+	</head>
+	<body>
+		<script type="text/template" id="demo-content">
+			<div>
+				<h1>H1 None</h1>
+				<br />
+				<strong>Strong 1</strong> Text 1 <code>Code 1</code><br />
+				<code style="text-decoration: underline" >Code 2</code><strong> Strong 2</strong>
+				<div style="font-size: 24px; font-family: Helvetica;">Text 2</div>
+			</div>
+			<br />
+			<div style="text-align: center">
+				<h1>H2 Right</h1>
+				<br />
+				<strong>Strong 1</strong> Text 1 <code>Code 1</code><br />
+				<code>Code 2</code><strong> Strong 2</strong>
+				<div style="font-size: 24px; font-family: Comic Sans MS;">Text 2</div>
+			</div>
+			<br />
+			<div style="text-align: right">
+				<h1>H2 Right</h1>
+				<br />
+				<strong>Strong 1</strong> Text 1 <code>Code 1</code><br />
+				<code>Code 2</code><strong> Strong 2</strong>
+				<div style="font-size: 24px; font-family: fantasy">Text 2</div>
+			</div>
+			<ol>
+				<li>One</li>
+				<li>Two</li>
+				<li>Three</li>
+			</ol>
+			<ul>
+				<li>Dot</li>
+				<li>Dot</li>
+				<li>Dot</li>
+			</ul>
+		</script>
+		<div id="editor"></div>
+		<script>
+			$(document).ready(function() {
+				var view = new BetaJS.Views.RichEditorView({
+					el : "#editor",
+					content: $("#demo-content").html()
+				});
+				view.activate();
+			});
+		</script>
+	</body>
+</html>
