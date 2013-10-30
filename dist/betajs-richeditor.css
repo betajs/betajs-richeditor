@@ -1,8 +1,11 @@
 /*
-  betajs-codemirror - v0.0.1 - 2013-10-28
+  betajs-codemirror - v0.0.1 - 2013-10-31
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
+.rich-editor-view {
+  background: grey; }
+
 .rich-editor-view .controlbox {
   margin: 2px 2px 2px 2px;
   height: 40px;
@@ -29,3 +32,6 @@
   top: 0px;
   bottom: 0px;
   resize: none; }
+
+.simple-rich-editor-view {
+  background: white; }
