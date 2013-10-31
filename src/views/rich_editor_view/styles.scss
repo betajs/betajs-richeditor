@@ -1,32 +1,30 @@
+/*
+ * Variables
+ */
+$controlboxheight: 40px;
+$margin: 2px;
+/*
+ * Rich Editor Main
+ */
 .rich-editor-view {
-  background: grey;
 }
-
 .rich-editor-view .controlbox {
-  margin: 2px 2px 2px 2px;
-  height: 40px;
-  border: 1px solid #e5e5e5;
+  margin: $margin;
+  height: $controlboxheight;
+  border-width: 1px;
 }
-
 .rich-editor-view .button {
-  width: 40px;
-  height: 40px;
+  width: $controlboxheight;
+  height: $controlboxheight;
   overflow: hidden;
   text-align: center;
   cursor: pointer;
 }
-
-.rich-editor-view .button:hover {
-  background: #e5e5e5;
-}
-
 .rich-editor-view .editbox {
-  margin: 2px 2px 2px 2px;
-  border: 1px solid #e5e5e5; 
+  margin: $margin;
+  border-width: 1px; 
   overflow: scroll;
-  background: white;
-}
-  
+} 
 .rich-editor-view .textareadiv {
   width: 100%;
   top: 0px;

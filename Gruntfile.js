@@ -29,6 +29,7 @@ module.exports = function(grunt) {
 			dist_scss: {
 				dest : 'dist/betajs-richeditor.scss',
 				src : [
+					'src/assets/theme-main.scss',
 			        'src/views/*/styles.scss',
 			    ]
 			},

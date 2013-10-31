@@ -3,13 +3,37 @@
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
+/*
+ * Variables
+ */
+/*
+ * Main
+ */
 .rich-editor-view {
-  background: grey; }
+  background: #f3f3f3; }
 
 .rich-editor-view .controlbox {
-  margin: 2px 2px 2px 2px;
+  border-style: solid;
+  border-color: #e5e5e5; }
+
+.rich-editor-view .button:hover {
+  background: #e5e5e5; }
+
+.rich-editor-view .editbox {
+  background: white;
+  border-style: solid;
+  border-color: #e5e5e5; }
+
+/*
+ * Variables
+ */
+/*
+ * Rich Editor Main
+ */
+.rich-editor-view .controlbox {
+  margin: 2px;
   height: 40px;
-  border: 1px solid #e5e5e5; }
+  border-width: 1px; }
 
 .rich-editor-view .button {
   width: 40px;
@@ -18,14 +42,10 @@
   text-align: center;
   cursor: pointer; }
 
-.rich-editor-view .button:hover {
-  background: #e5e5e5; }
-
 .rich-editor-view .editbox {
-  margin: 2px 2px 2px 2px;
-  border: 1px solid #e5e5e5;
-  overflow: scroll;
-  background: white; }
+  margin: 2px;
+  border-width: 1px;
+  overflow: scroll; }
 
 .rich-editor-view .textareadiv {
   width: 100%;

@@ -1,0 +1,23 @@
+/*
+ * Variables
+ */
+$bg: #F3F3F3;
+$contrast: #e5e5e5;
+/*
+ * Main
+ */
+.rich-editor-view {
+  background: $bg;
+}
+.rich-editor-view .controlbox {
+  border-style: solid;
+  border-color: $contrast;
+}
+.rich-editor-view .button:hover {
+  background: $contrast;
+}
+.rich-editor-view .editbox {
+  background: white;
+  border-style: solid;
+  border-color: $contrast;
+} 

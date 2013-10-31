@@ -4,4 +4,4 @@
   MIT Software License.
 */
 
-.rich-editor-view{background:grey}.rich-editor-view .controlbox{margin:2px;height:40px;border:1px solid #e5e5e5}.rich-editor-view .button{width:40px;height:40px;overflow:hidden;text-align:center;cursor:pointer}.rich-editor-view .button:hover{background:#e5e5e5}.rich-editor-view .editbox{margin:2px;border:1px solid #e5e5e5;overflow:scroll;background:#fff}.rich-editor-view .textareadiv{width:100%;top:0;bottom:0;resize:none}.simple-rich-editor-view{background:#fff}
+.rich-editor-view{background:#f3f3f3}.rich-editor-view .controlbox{border-style:solid;border-color:#e5e5e5}.rich-editor-view .button:hover{background:#e5e5e5}.rich-editor-view .editbox{background:#fff;border-style:solid;border-color:#e5e5e5}.rich-editor-view .controlbox{margin:2px;height:40px;border-width:1px}.rich-editor-view .button{width:40px;height:40px;overflow:hidden;text-align:center;cursor:pointer}.rich-editor-view .editbox{margin:2px;border-width:1px;overflow:scroll}.rich-editor-view .textareadiv{width:100%;top:0;bottom:0;resize:none}.simple-rich-editor-view{background:#fff}
