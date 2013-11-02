@@ -11,6 +11,14 @@ module.exports = function(grunt) {
 				}
 			}
 		},
+		copy: {
+		  main: {
+		    files: [
+		      {expand: true, cwd: 'src/vendors/icomoon', src: 'icomoon.css', dest: 'dist/vendors'}, 
+		      {expand: true, cwd: 'src/vendors/icomoon/fonts', src: '*', dest: 'dist/vendors/fonts'}
+		    ]
+		  }
+		},
 		concat : {
 			options : {
 				banner : '/*!\n'

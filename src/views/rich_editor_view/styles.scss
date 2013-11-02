@@ -1,60 +1,65 @@
 /*
  * Variables
  */
-$controlboxheight: 40px;
-$margin: 2px;
+$controlboxheight: 30px;
+$controlboxmargin: 5px;
 $widthsidebar: 200px;
+$background: #F5F5F5;
+$contrast: rgba(0, 0, 0, 0.1);
 /*
- * Rich Editor Main
+ * Rich Editor Toolbar
  */
 .rich-editor-view {
+  background: $background;
 }
-.rich-editor-view .controlbox {
-  margin: $margin;
+.rich-editor-view .toolbar {
+  margin: $controlboxmargin;
   height: $controlboxheight;
   border-width: 1px;
 }
-.rich-editor-view .button {
-  width: $controlboxheight;
-  height: $controlboxheight;
-  overflow: hidden;
-  text-align: center;
-  cursor: pointer;
-}
-.rich-editor-view .editbox {
-  margin: $margin;
-  border-width: 1px; 
-  overflow: scroll;
-} 
-.rich-editor-view .textareadiv {
-  width: 100%;
-  top: 0px;
-  bottom: 0px;
-  resize: none;
-}
-
-/*
- * Page Head
- */
-.page-head {
-  height: $controlboxheight;
-  padding: $margin;
-  z-index: 30;
-} 
-.page-head button {
+.rich-editor-view button {
   height: $controlboxheight;
   min-width: $controlboxheight;
+  overflow: hidden;
+  text-align: center;
+  
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-family: Times;
+  font-size: 15px;
+  cursor: pointer;
+}
+.rich-editor-view .seperator {
+  height: $controlboxheight;
+  width: 1px;
+  margin: 0px $controlboxmargin;
+  background: $contrast;
+}
+.rich-editor-view button:hover {
+  border: 1px solid $contrast;
+}
+.rich-editor-view .bold{
+  font-weight: bold;
+}
+.rich-editor-view .italic{
+  font-style: italic;
+}
+.rich-editor-view .underline{
+  text-decoration: underline;
 }
 /*
- * Logo & Signin/Signup
+ * Rich Editor Editor
  */
-.page-head .logo-container {
-  width: $widthsidebar - $controlboxheight;
-  text-align: left;
-}    
-.page-head .text-container {
-  padding: 0 10px;  
+.rich-editor-view .textareadiv {
+  position: absolute;
+  width: 100%;
+  top: $controlboxheight + 2 * $controlboxmargin;
+  bottom: 0px;
+  resize: none;
+  overflow: scroll;
 }
+
+
 /*
  * Title Dropdown
  */
