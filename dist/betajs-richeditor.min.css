@@ -1,7 +1,7 @@
 /*!
-  betajs-codemirror - v0.0.1 - 2013-10-31
+  betajs-codemirror - v0.0.1 - 2013-11-02
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
 
-.rich-editor-view{background:#f3f3f3}.rich-editor-view .controlbox{border-style:solid;border-color:#e5e5e5}.rich-editor-view .button:hover{background:#e5e5e5}.rich-editor-view .editbox{background:#fff;border-style:solid;border-color:#e5e5e5}.rich-editor-view .controlbox{margin:2px;height:40px;border-width:1px}.rich-editor-view .button{width:40px;height:40px;overflow:hidden;text-align:center;cursor:pointer}.rich-editor-view .editbox{margin:2px;border-width:1px;overflow:scroll}.rich-editor-view .textareadiv{width:100%;top:0;bottom:0;resize:none}.simple-rich-editor-view{background:#fff}
+.rich-editor-view{background:#f3f3f3}.rich-editor-view .controlbox{border-style:solid;border-color:#e5e5e5}.rich-editor-view .button:hover{background:#e5e5e5}.rich-editor-view .editbox{background:#fff;border-style:solid;border-color:#e5e5e5}.rich-editor-view .controlbox{margin:2px;height:40px;border-width:1px}.rich-editor-view .button{width:40px;height:40px;overflow:hidden;text-align:center;cursor:pointer}.rich-editor-view .editbox{margin:2px;border-width:1px;overflow:scroll}.rich-editor-view .textareadiv{width:100%;top:0;bottom:0;resize:none}.page-head{height:40px;padding:2px;z-index:30}.page-head button{height:40px;min-width:40px}.page-head .logo-container{width:160px;text-align:left}.page-head .text-container{padding:0 10px}.page-head .overlay-container-class{width:160px;font-size:13px}.page-head .logo-dropdown button{text-align:left;width:100%}.page-head .settings-overlay{width:200px}.simple-rich-editor-view{background:#fff}

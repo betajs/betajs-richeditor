@@ -1,5 +1,5 @@
 /*
-  betajs-codemirror - v0.0.1 - 2013-10-31
+  betajs-codemirror - v0.0.1 - 2013-11-02
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
@@ -52,6 +52,45 @@
   top: 0px;
   bottom: 0px;
   resize: none; }
+
+/*
+ * Page Head
+ */
+.page-head {
+  height: 40px;
+  padding: 2px;
+  z-index: 30; }
+
+.page-head button {
+  height: 40px;
+  min-width: 40px; }
+
+/*
+ * Logo & Signin/Signup
+ */
+.page-head .logo-container {
+  width: 160px;
+  text-align: left; }
+
+.page-head .text-container {
+  padding: 0 10px; }
+
+/*
+ * Title Dropdown
+ */
+.page-head .overlay-container-class {
+  width: 160px;
+  font-size: 13px; }
+
+.page-head .logo-dropdown button {
+  text-align: left;
+  width: 100%; }
+
+/*
+ * Settings Dropdown
+ */
+.page-head .settings-overlay {
+  width: 200px; }
 
 .simple-rich-editor-view {
   background: white; }

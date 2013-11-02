@@ -3,6 +3,7 @@
  */
 $controlboxheight: 40px;
 $margin: 2px;
+$widthsidebar: 200px;
 /*
  * Rich Editor Main
  */
@@ -31,3 +32,45 @@ $margin: 2px;
   bottom: 0px;
   resize: none;
 }
+
+/*
+ * Page Head
+ */
+.page-head {
+  height: $controlboxheight;
+  padding: $margin;
+  z-index: 30;
+} 
+.page-head button {
+  height: $controlboxheight;
+  min-width: $controlboxheight;
+}
+/*
+ * Logo & Signin/Signup
+ */
+.page-head .logo-container {
+  width: $widthsidebar - $controlboxheight;
+  text-align: left;
+}    
+.page-head .text-container {
+  padding: 0 10px;  
+}
+/*
+ * Title Dropdown
+ */
+.page-head .overlay-container-class {
+  width: $widthsidebar - $controlboxheight;
+  font-size: 13px;
+}
+.page-head .logo-dropdown button{
+  text-align: left;
+  width: 100%;
+}
+/*
+ * Settings Dropdown
+ */
+.page-head .settings-overlay {
+  width: $widthsidebar;
+}
+
+
