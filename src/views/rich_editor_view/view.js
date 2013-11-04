@@ -145,7 +145,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 			},
 			
-			Justify_align_button: {
+			justify_align_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
