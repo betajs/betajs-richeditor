@@ -58,11 +58,12 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				parent: "toolbar",
 				options: {
 					label: "B",
-					children_classes: "bold"
+					children_classes: "bold",
+					hotkey: "ctrl+b",
 				},
 				events: {
 					"click": function () {
-						alert("Bold");
+						alert("Bold? " + this.domain.ns.editor_view.actions.isBold());
 					}
 				},
 			},
@@ -72,11 +73,12 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				parent: "toolbar",
 				options: {
 					label: "I",
-					children_classes: "italic"
+					children_classes: "italic",
+					hotkey: "ctrl+i"
 				},
 				events: {
 					"click": function () {
-						alert("Italic");
+						alert("Italic? " + this.domain.ns.editor_view.actions.isItalic());
 					}
 				},
 			},
@@ -159,9 +161,11 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 			editor_view: {
 				type: "BetaJS.Views.SimpleRichEditorView",
 				el: ".editbox",
-				options:{
-					children_classes: "textareadiv",
-					content: this.binding("content")
+				options: function (page) {
+					return {
+						children_classes: "textareadiv",
+						content: page.binding("content")
+					};
 				}
 			}
 
