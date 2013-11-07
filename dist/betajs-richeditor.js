@@ -1,5 +1,5 @@
 /*!
-  betajs-codemirror - v0.0.1 - 2013-11-04
+  betajs-codemirror - v0.0.1 - 2013-11-07
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
@@ -266,13 +266,13 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "B",
-					children_classes: "bold",
+					children_classes: "icon-bold",
 					hotkey: "ctrl+b",
 				},
 				events: {
 					"click": function () {
 						alert("Bold? " + this.domain.ns.editor_view.actions.isBold());
+						this.domain.ns.editor_view.actions.isBold();
 					}
 				},
 			},
@@ -281,8 +281,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "I",
-					children_classes: "italic",
+					children_classes: "icon-italic",
 					hotkey: "ctrl+i"
 				},
 				events: {
@@ -296,8 +295,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "U",
-					children_classes: "underline"
+					children_classes: "icon-underline",
 				},
 				events: {
 					"click": function () {
@@ -318,7 +316,6 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "L",
 					children_classes: "icon-align-left",
 				},
 				events: {
@@ -332,7 +329,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "C",
+					children_classes: "icon-align-center",
 				},
 				events: {
 					"click": function () {
@@ -345,7 +342,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "R",
+					children_classes: "icon-align-right",
 				},
 				events: {
 					"click": function () {
@@ -358,7 +355,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "J",
+					children_classes: "icon-align-justify",
 				},
 				events: {
 					"click": function () {
@@ -369,7 +366,6 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 			
 			editor_view: {
 				type: "BetaJS.Views.SimpleRichEditorView",
-				el: ".editbox",
 				options: function (page) {
 					return {
 						children_classes: "textareadiv",

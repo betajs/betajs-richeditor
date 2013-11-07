@@ -1,5 +1,5 @@
 /*
-  betajs-codemirror - v0.0.1 - 2013-11-04
+  betajs-codemirror - v0.0.1 - 2013-11-07
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
@@ -45,8 +45,7 @@
   text-align: center;
   border: 1px solid transparent;
   border-radius: 3px;
-  font-family: Times;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer; }
 
 .rich-editor-view .seperator {
@@ -72,9 +71,11 @@
  */
 .rich-editor-view .textareadiv {
   position: absolute;
-  width: 100%;
   top: 40px;
+  right: 0px;
   bottom: 0px;
+  left: 0px;
+  margin: 3px;
   resize: none;
   overflow: scroll; }
 
