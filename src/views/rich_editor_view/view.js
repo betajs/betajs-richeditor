@@ -102,6 +102,40 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 					el_classes: "seperator"
 				}
 			},
+							
+			bulletpoint_button: {
+				type: "ButtonView",
+				parent: "toolbar",
+				options: {
+					children_classes: "icon-list-ul",
+				},
+				events: {
+					"click": function () {
+						alert("Bulletpoint");
+					}
+				},
+			},
+						
+			numberedlist_button: {
+				type: "ButtonView",
+				parent: "toolbar",
+				options: {
+					children_classes: "icon-list-ol",
+				},
+				events: {
+					"click": function () {
+						alert("Numberedlist");
+					}
+				},
+			},
+						
+			seperator3: {
+				type: "BetaJS.Views.View",
+				parent: "toolbar",
+				options: {
+					el_classes: "seperator"
+				}
+			},
 				
 			left_align_button: {
 				type: "ButtonView",

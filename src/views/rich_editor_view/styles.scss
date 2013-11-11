@@ -20,6 +20,7 @@ $contrast: rgba(0, 0, 0, 0.1);
 .rich-editor-view button {
   height: $controlboxheight;
   min-width: $controlboxheight;
+  background: $background;
   overflow: hidden;
   text-align: center;
   
