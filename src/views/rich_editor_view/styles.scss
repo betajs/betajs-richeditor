@@ -25,8 +25,7 @@ $contrast: rgba(0, 0, 0, 0.1);
   
   border: 1px solid transparent;
   border-radius: 3px;
-  font-family: Times;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
 }
 .rich-editor-view button.selected {
@@ -55,14 +54,14 @@ $contrast: rgba(0, 0, 0, 0.1);
  */
 .rich-editor-view .textareadiv {
   position: absolute;
-  width: 100%;
   top: $controlboxheight + 2 * $controlboxmargin;
+  right: 0px;
   bottom: 0px;
+  left: 0px;
+  margin: 3px;
   resize: none;
   overflow: scroll;
 }
-
-
 /*
  * Title Dropdown
  */

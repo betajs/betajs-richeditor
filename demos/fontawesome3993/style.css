@@ -1,0 +1,98 @@
+@font-face {
+	font-family: 'fontawesome';
+	src:url('fonts/fontawesome.eot');
+	src:url('fonts/fontawesome.eot?#iefix') format('embedded-opentype'),
+		url('fonts/fontawesome.woff') format('woff'),
+		url('fonts/fontawesome.ttf') format('truetype'),
+		url('fonts/fontawesome.svg#fontawesome') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+/* Use the following CSS code if you want to use data attributes for inserting your icons */
+[class*="icon-"],[data-icon]:before {
+	font-family: 'fontawesome';
+	content: attr(data-icon);
+	speak: none;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	font-size: 14px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Use the following CSS code if you want to have a class per icon */
+/*
+Instead of a list of all class selectors,
+you can use the generic selector below, but it's slower:
+[class*="icon-"] {
+*/
+.icon-align-left, .icon-align-center, .icon-align-right, .icon-align-justify, .icon-font, .icon-bold, .icon-italic, .icon-list-ul, .icon-list-ol, .icon-strikethrough, .icon-underline, .icon-caret-down, .icon-sort-down, .icon-picture, .icon-tint, .icon-map-marker, .icon-pencil, .icon-adjust, .icon-calendar {
+	font-family: 'fontawesome';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+}
+.icon-align-left:before {
+	content: "\f036";
+}
+.icon-align-center:before {
+	content: "\f037";
+}
+.icon-align-right:before {
+	content: "\f038";
+}
+.icon-align-justify:before {
+	content: "\f039";
+}
+.icon-font:before {
+	content: "\f031";
+}
+.icon-bold:before {
+	content: "\f032";
+}
+.icon-italic:before {
+	content: "\f033";
+}
+.icon-list-ul:before {
+	content: "\f0ca";
+}
+.icon-list-ol:before {
+	content: "\f0cb";
+}
+.icon-strikethrough:before {
+	content: "\f0cc";
+}
+.icon-underline:before {
+	content: "\f0cd";
+}
+.icon-caret-down:before {
+	content: "\f0d7";
+}
+.icon-sort-down:before {
+	content: "\f0dd";
+}
+.icon-picture:before {
+	content: "\f03e";
+}
+.icon-tint:before {
+	content: "\f043";
+}
+.icon-map-marker:before {
+	content: "\f041";
+}
+.icon-pencil:before {
+	content: "\f040";
+}
+.icon-adjust:before {
+	content: "\f042";
+}
+.icon-calendar:before {
+	content: "\f073";
+}
