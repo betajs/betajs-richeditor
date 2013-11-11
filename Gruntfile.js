@@ -30,7 +30,8 @@ module.exports = function(grunt) {
 				dest : 'dist/betajs-richeditor.js',
 				src : [
 			        'dist/templates.js',
-			        'src/views/simple_rich_editor_view/view.js',
+			        'src/views/simple_rich_editor_content_view/view.js',
+			        'src/views/rich_editor_content_view/view.js',
 			        'src/views/rich_editor_view/view.js',
 				]
 			},

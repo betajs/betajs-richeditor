@@ -1,209 +1,227 @@
 /*!
-  betajs-codemirror - v0.0.1 - 2013-11-09
+  betajs-codemirror - v0.0.1 - 2013-11-12
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['rich-editor-view-template'] = '  <div class="rich-editor-view">    <div class="controlbox">       <div class="button" style="float: left"><div class="buttonicon icon ui-icon-power"></div></div>       <div class="button" style="float: left"><div class="buttonicon icon ui-icon-phone"></div></div>       <div class="button" style="float: left"><div class="buttonicon icon ui-icon-apple"></div></div>   </div>   <div class="editbox">   </div>  </div> ';
 
-BetaJS.Templates.Cached['simple-rich-editor-view-template'] = '  <div class="simple-rich-editor-view" contenteditable="true" data-selector="inner" data-view-id="{%= supp.view_id %}">   {%= content %}  </div> ';
+BetaJS.Templates.Cached['simple-rich-editor-content-view-template'] = '  <div class="simple-rich-editor-content-view" contenteditable="true" data-selector="inner" data-view-id="{%= supp.view_id %}">   {%= content %}  </div> ';
 
-BetaJS.Browser.Dom = {
-	
-	traverseNext: function (node, skip_children) {
-		if ("get" in node)
-			node = node.get(0);
-		if (node.firstChild && !skip_children)
-			return BetaJS.$(node.firstChild);
-		if (!node.parentNode)
-			return null;
-		if (node.nextSibling)
-			return BetaJS.$(node.nextSibling);
-		return this.traverseNext(node.parentNode, true);
-	},
-	
-	selectionStartNode : function() {
-		if (window.getSelection)
-			return BetaJS.$(window.getSelection().getRangeAt(0).startContainer);
-		else if (document.selection)
-			return BetaJS.$(document.selection.createRange().startContainer);
-		return null;
-	},
-	
-	selectedHtml : function() {
-		if (window.getSelection)
-			return window.getSelection().toString();
-		else if (document.selection)
-			return document.selection.createRange().htmlText;
-	},
-	
-	selectionAncestor : function() {
-		if (window.getSelection)
-			return BetaJS.$(window.getSelection().getRangeAt(0).commonAncestorContainer);
-		else if (document.selection)
-			return BetaJS.$(document.selection.createRange().parentElement());
-		return null;
-	},
-	
-	selectionStart : function() {
-		if (window.getSelection)
-			return BetaJS.$(window.getSelection().getRangeAt(0).startContainer);
-		else if (document.selection)
-			return BetaJS.$(document.selection.createRange().startContainer);
-		return null;
-	},
-
-	selectionEnd : function() {
-		if (window.getSelection)
-			return BetaJS.$(window.getSelection().getRangeAt(0).endContainer);
-		else if (document.selection)
-			return BetaJS.$(document.selection.createRange().endContainer);
-		return null;
-	},
-
-	selectionNodes: function () {
-		var result = [];
-		var start = this.selectionStart();
-		var end = this.selectionEnd();
-		result.push(start);
-		var current = start;
-		while (current.get(0) != end.get(0)) {
-			current = this.traverseNext(current);
-			result.push(current);
-		}
-		return result;
-	}
-	
-};
-
-BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorView", {
+BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 
 	_templates : {
-		"default" : BetaJS.Templates.Cached["simple-rich-editor-view-template"]
+		"default" : BetaJS.Templates.Cached["simple-rich-editor-content-view-template"]
 	},
 
 	constructor : function(options) {
-		this._inherited(BetaJS.Views.SimpleRichEditorView, "constructor", options);
+		this._inherited(BetaJS.Views.SimpleRichEditorContentView, "constructor", options);
 		this._setOptionProperty(options, "content", "");
 		this._selector = "[data-view-id='" + this.cid() + "']";
-		this.actions.__context = this;
-		this.selection.__context = this;
-		this.caret.__context = this;
+		this.__wasKeyPress = false;
 	},
-
-	_events : function() {
-		return this._inherited(BetaJS.Views.SimpleRichEditorView, "_events").concat([{
-			"blur [data-selector='inner']" : "__change",
-			"keyup [data-selector='inner']" : "__change",
-			"paste [data-selector='inner']" : "__change"
-		}]);
+	
+	_events : [{
+		"blur [data-selector='inner']" : "__change",
+		"keyup [data-selector='inner']" : "__change",
+		"paste [data-selector='inner']" : "__change",
+		"keypress [data-selector='inner']" : "__key_press",
+		"keyup [data-selector='inner']" : "__key_up",
+		"click  [data-selector='inner']" : "__click",
+	}],
+	
+	__key_press: function (e) {
+		this.__wasKeyPress = true;
+		if (e.which !== 0)
+			this.trigger("insert");
+		this.trigger("select");
+		this.trigger("element");
 	},
-
+	
+	__key_up: function () {
+		if (!this.__wasKeyPress) {
+			this.trigger("insert");
+			this.trigger("select");
+			this.trigger("element");			
+		}
+		this.__wasKeyPress = false;
+	},
+	
+	__click: function () {
+		this.trigger("select");
+		this.trigger("element");
+	},
+	
 	__change : function() {
-		this.set("content", this.$("[data-selector='inner']").html());
+		this.set("content", this._editor.html());
 	},
-
+	
 	_render : function() {
-		this._inherited(BetaJS.Views.SimpleRichEditorView, "_render");
+		this._inherited(BetaJS.Views.SimpleRichEditorContentView, "_render");
 		this._editor = this.$("[data-selector='inner']");
 	},
+	
+	hasFocus: function () {
+		return (document.activeElement == this._editor.get(0)) ||
+		       (BetaJS.$(document.activeElement).parents(this._selector).length > 0);
+	}
+	
+});
 
-	actions : {
-		__context : null,
+/*
+ * - Caret Remove
+ * - Selection Add
+ * - Selection Remove
+ * 
+ */
 
-		hasParentElement : function(element) {
-			var access = this.__context.selection.isSelected() ? this.__context.selection : this.__context.caret;
-			return this.__context.selection.isSelected() ? access.hasParentElement(element) : access.hasParentElement(element);
-		},
 
-		setParentElement : function(element, value) {
-			var has = this.hasParentElement(element);
-			if (BetaJS.Types.is_undefined(value))
-				value = !has;
-			if (value == has)
-				return;
-			var access = this.__context.selection.isSelected() ? this.__context.selection : this.__context.caret;
-			if (has)
-				access.removeParentElement(element);
+BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentView", {
+	
+	constructor : function(options) {
+		this._inherited(BetaJS.Views.RichEditorContentView, "constructor", options);
+		this.__caretElementStack = {};
+		this.on("select", function () {
+			this.__caretClearElementStack();
+		}, this);
+		this.on("insert", function () {
+			this.__caretCharacterAdded();
+		}, this);
+	},
+	
+	caretNodeOffset: function () {
+		return BetaJS.Browser.Dom.selectionOffset();
+	},
+
+	hasParentElement : function(element) {
+		return this.isSelected() ? this.selectionHasParentElement(element) : this.caretHasParentElement(element);
+	},
+
+	setParentElement : function(element, value) {
+		if (this.isSelected())
+			this.selectionSetParentElement(element, value);
+		else
+			this.caretSetParentElement(element, value);
+	},
+
+	isSelected : function() {
+		return this.hasFocus() && BetaJS.Browser.Dom.selectedHtml() != "";
+	},
+		
+	selectionAncestor: function () {
+		return BetaJS.Browser.Dom.selectionAncestor();
+	},
+	
+	selection: function () {
+		return BetaJS.Browser.Dom.selectionNodes();
+	},
+		
+	selectionLeaves: function () {
+		return BetaJS.Browser.Dom.selectionLeaves();
+	},
+
+	selectionHasParentElement : function(element) {
+		if (!this.hasFocus())
+			return;
+		if (this.selectionAncestor().parents(this._selector + " " + element).length > 0)
+			return true;
+		return BetaJS.Objs.all(this.selectionLeaves(), function (node) {
+			return (node.parents(this._selector + " " + element).length > 0) ||
+			       (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase());
+		}, this);
+	},
+	
+	selectionSetParentElement: function (element, value) {
+		if (!this.hasFocus())
+			return;
+		var has = this.selectionHasParentElement(element);
+		if (BetaJS.Types.is_undefined(value))
+			value = !has;
+		if (value == has)
+			return;
+		if (value)
+			this.selectionAddParentElement(element);
+		else
+			this.selectionRemoveParentElement(element);
+	},
+
+	selectionAddParentElement : function(element) {
+		if (!this.hasFocus())
+			return;
+		// TODO
+	},
+
+	selectionRemoveParentElement : function(element) {
+		if (!this.hasFocus())
+			return;
+		// TODO
+	},
+
+	caretNode : function() {
+		return BetaJS.Browser.Dom.selectionStartNode();
+	},
+
+	caretHasParentElement : function(element) {
+		if (BetaJS.Types.is_defined(this.__caretElementStack[element]))
+			return this.__caretElementStack[element];
+		return this.caretNode().parents(this._selector + " " + element).length > 0;
+	},
+
+	caretSetParentElement: function (element, value) {
+		var has = this.caretHasParentElement(element);
+		if (BetaJS.Types.is_undefined(value))
+			value = !has;
+		if (value == has)
+			return;
+		if (value)
+			this.caretAddParentElement(element);
+		else
+			this.caretRemoveParentElement(element);
+	},
+
+	caretAddParentElement : function(element) {
+		if (this.caretHasParentElement(element))
+			return;
+		this.__caretElementStack[element] = true;
+		this.trigger("element");
+	},
+	
+	__caretCharacterAdded: function () {
+		var yesTags = [];
+		var noTags = [];
+		BetaJS.Objs.iter(this.__caretElementStack, function (value, tag) {
+			if (value)
+				yesTags.push(tag);
 			else
-				access.addParentElement(element);
-		},
-
-		isBold : function() {
-			return this.hasParentElement("strong");
-		},
-
-		bold : function(value) {
-			this.setParentElement("strong", value);
-		},
-
-		isItalic : function() {
-			return this.hasParentElement("i");
-		},
-
-		italic : function(value) {
-			this.setParentElement("i", value);
+				noTags.push(tag);
+		});
+		var offset = this.caretNodeOffset();
+		var leftNode = this.caretNode();
+		var parent = leftNode.parent().get(0); 
+		var left = leftNode.get(0);
+		var right = left.splitText(offset);
+		var current = left.splitText(offset - 1);
+		var inner = current;
+		var content = current.data;
+		for (var i = 0; i < yesTags.length; ++i) {
+			var newElement = document.createElement(yesTags[i]);
+			newElement.appendChild(current);
+			current = newElement;
+			parent.insertBefore(current, right);
 		}
+		BetaJS.Browser.Dom.selectNode(inner, 1);
+		// TODO: noTags
+	},
+	
+	__caretClearElementStack: function () {
+		this.__caretElementStack = {};
 	},
 
-	selection : {
-		__context : null,
-
-		isSelected : function() {
-			return BetaJS.Browser.Dom.selectedHtml() != "";
-		},
-		
-		ancestor: function () {
-			return BetaJS.Browser.Dom.selectionAncestor();
-		},
-		
-		selection: function () {
-			return BetaJS.Browser.Dom.selectionNodes();
-		},
-		
-		selectionLeaves: function () {
-			var sel = this.selection();
-			return BetaJS.Objs.filter(this.selection(), function (node) {
-				return node.children().length == 0;
-			});
-		},
-
-		hasParentElement : function(element) {
-			if (this.ancestor().parents(this.__context._selector + " " + element).length > 0)
-				return true;
-			return BetaJS.Objs.all(this.selectionLeaves(), function (node) {
-				return (node.parents(this.__context._selector + " " + element).length > 0) ||
-				       (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase());
-			}, this);
-		},
-
-		addParentElement : function(element) {
-			// TODO
-		},
-
-		removeParentElement : function(element) {
-			// TODO
-		}
-	},
-
-	caret : {
-		__context : null,
-
-		node : function() {
-			return BetaJS.Browser.Dom.selectionStartNode();
-		},
-
-		hasParentElement : function(element) {
-			return this.node().parents(this.__context._selector + " " + element).length > 0;
-		},
-
-		addParentElement : function(element) {
-			// TODO
-		},
-
-		removeParentElement : function(element) {
-			// TODO
-		}
+	caretRemoveParentElement : function(element) {
+		if (!this.caretHasParentElement(element))
+			return;
+		this.__caretElementStack[element] = false;
+		this.trigger("element");
 	}
 
 }); 
@@ -216,6 +234,9 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 		options.alignment = "vertical";
 		this._inherited(BetaJS.Views.RichEditorView, "constructor", options);
 		this._setOptionProperty(options, "content", "");
+		this.ns.editor_view.on("element", function () {			
+			this.trigger("element-slow");
+		}, this, { min_delay: 50, max_delay: 200 });
 	},
 	
 	_domain: function () {
@@ -266,15 +287,20 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-bold",
-					hotkey: "ctrl+b",
+					label: "B",
+					children_classes: "bold",
+					hotkey: "ctrl+b"
 				},
 				events: {
 					"click": function () {
-						alert("Bold? " + this.domain.ns.editor_view.actions.isBold());
-						this.domain.ns.editor_view.actions.isBold();
+						this.domain.ns.editor_view.setParentElement("strong");
 					}
 				},
+				listeners: {
+					"element-slow": function () {
+						this.set("selected", this.domain.ns.editor_view.hasParentElement("strong"));
+					}
+				}
 			},
 			
 			italic_button: {
@@ -286,9 +312,14 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 				events: {
 					"click": function () {
-						alert("Italic? " + this.domain.ns.editor_view.actions.isItalic());
+						this.domain.ns.editor_view.setParentElement("i");
 					}
 				},
+				listeners: {
+					"element-slow": function () {
+						this.set("selected", this.domain.ns.editor_view.hasParentElement("i"));
+					}
+				}
 			},
 			
 			underline_button: {
@@ -399,7 +430,8 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 			},
 			
 			editor_view: {
-				type: "BetaJS.Views.SimpleRichEditorView",
+				type: "BetaJS.Views.RichEditorContentView",
+				el: ".editbox",
 				options: function (page) {
 					return {
 						children_classes: "textareadiv",

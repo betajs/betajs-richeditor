@@ -7,6 +7,9 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 		options.alignment = "vertical";
 		this._inherited(BetaJS.Views.RichEditorView, "constructor", options);
 		this._setOptionProperty(options, "content", "");
+		this.ns.editor_view.on("element", function () {			
+			this.trigger("element-slow");
+		}, this, { min_delay: 50, max_delay: 200 });
 	},
 	
 	_domain: function () {
@@ -57,15 +60,20 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-bold",
-					hotkey: "ctrl+b",
+					label: "B",
+					children_classes: "bold",
+					hotkey: "ctrl+b"
 				},
 				events: {
 					"click": function () {
-						alert("Bold? " + this.domain.ns.editor_view.actions.isBold());
-						this.domain.ns.editor_view.actions.isBold();
+						this.domain.ns.editor_view.setParentElement("strong");
 					}
 				},
+				listeners: {
+					"element-slow": function () {
+						this.set("selected", this.domain.ns.editor_view.hasParentElement("strong"));
+					}
+				}
 			},
 			
 			italic_button: {
@@ -77,9 +85,14 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 				events: {
 					"click": function () {
-						alert("Italic? " + this.domain.ns.editor_view.actions.isItalic());
+						this.domain.ns.editor_view.setParentElement("i");
 					}
 				},
+				listeners: {
+					"element-slow": function () {
+						this.set("selected", this.domain.ns.editor_view.hasParentElement("i"));
+					}
+				}
 			},
 			
 			underline_button: {
@@ -190,7 +203,8 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 			},
 			
 			editor_view: {
-				type: "BetaJS.Views.SimpleRichEditorView",
+				type: "BetaJS.Views.RichEditorContentView",
+				el: ".editbox",
 				options: function (page) {
 					return {
 						children_classes: "textareadiv",
