@@ -1,5 +1,5 @@
 /*
-  betajs-codemirror - v0.0.1 - 2013-11-04
+  betajs-codemirror - v0.0.1 - 2013-11-10
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
@@ -49,6 +49,9 @@
   font-size: 15px;
   cursor: pointer; }
 
+.rich-editor-view button.selected {
+  border: 1px solid yellow; }
+
 .rich-editor-view .seperator {
   height: 30px;
   width: 1px;
@@ -95,5 +98,5 @@
 .page-head .settings-overlay {
   width: 200px; }
 
-.simple-rich-editor-view {
+.simple-rich-editor-content-view {
   background: white; }

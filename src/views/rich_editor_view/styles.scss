@@ -29,6 +29,9 @@ $contrast: rgba(0, 0, 0, 0.1);
   font-size: 15px;
   cursor: pointer;
 }
+.rich-editor-view button.selected {
+  border: 1px solid yellow;
+}
 .rich-editor-view .seperator {
   height: $controlboxheight;
   width: 1px;
