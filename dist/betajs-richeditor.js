@@ -1,5 +1,5 @@
 /*!
-  betajs-codemirror - v0.0.1 - 2013-11-12
+  betajs-codemirror - v0.0.1 - 2013-11-13
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
@@ -18,42 +18,47 @@ BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 		this._inherited(BetaJS.Views.SimpleRichEditorContentView, "constructor", options);
 		this._setOptionProperty(options, "content", "");
 		this._selector = "[data-view-id='" + this.cid() + "']";
-		this.__wasKeyPress = false;
+		this.__wasKeyInput = false;
+		this.on("select", function () { this.trigger("element"); }, this);
 	},
 	
+	_global_events: [{
+		"selectionchange": "__select",
+	}],
+			
 	_events : [{
-		"blur [data-selector='inner']" : "__change",
-		"keyup [data-selector='inner']" : "__change",
-		"paste [data-selector='inner']" : "__change",
-		"keypress [data-selector='inner']" : "__key_press",
-		"keyup [data-selector='inner']" : "__key_up",
-		"click  [data-selector='inner']" : "__click",
+		"blur [data-selector='inner']" : "__leave",
+		"focus [data-selector='inner']": "__enter",
+		"input [data-selector='inner']": "__change",
+		"keypress [data-selector='inner']": "__keypress",
 	}],
 	
-	__key_press: function (e) {
-		this.__wasKeyPress = true;
-		if (e.which !== 0)
-			this.trigger("insert");
-		this.trigger("select");
-		this.trigger("element");
-	},
-	
-	__key_up: function () {
-		if (!this.__wasKeyPress) {
-			this.trigger("insert");
+	__select: function () {
+		if (this.hasFocus())
 			this.trigger("select");
-			this.trigger("element");			
-		}
-		this.__wasKeyPress = false;
 	},
 	
-	__click: function () {
-		this.trigger("select");
-		this.trigger("element");
+	__leave: function () {
+		this.trigger("leave");
+	},
+
+	__enter: function () {
+		this.trigger("enter");
 	},
 	
-	__change : function() {
+	__change: function () {
 		this.set("content", this._editor.html());
+		this.trigger("change");
+		if (this.__wasKeyInput) {
+			this.__wasKeyInput = false;
+			this.trigger("keyinput");
+		}
+	},
+
+	__keypress: function (e) {
+		this.__wasKeyInput = false;
+		if (e.which !== 0)
+			this.__wasKeyInput = true;			
 	},
 	
 	_render : function() {
@@ -64,17 +69,13 @@ BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 	hasFocus: function () {
 		return (document.activeElement == this._editor.get(0)) ||
 		       (BetaJS.$(document.activeElement).parents(this._selector).length > 0);
+	},
+	
+	focus: function () {
+		this._editor.focus();
 	}
 	
 });
-
-/*
- * - Caret Remove
- * - Selection Add
- * - Selection Remove
- * 
- */
-
 
 BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentView", {
 	
@@ -84,13 +85,13 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 		this.on("select", function () {
 			this.__caretClearElementStack();
 		}, this);
-		this.on("insert", function () {
+		this.on("keyinput", function () {
 			this.__caretCharacterAdded();
 		}, this);
 	},
 	
 	caretNodeOffset: function () {
-		return BetaJS.Browser.Dom.selectionOffset();
+		return BetaJS.Browser.Dom.selectionEndOffset();
 	},
 
 	hasParentElement : function(element) {
@@ -105,9 +106,9 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 	},
 
 	isSelected : function() {
-		return this.hasFocus() && BetaJS.Browser.Dom.selectedHtml() != "";
+		return BetaJS.Browser.Dom.selectionContained(this._editor) && BetaJS.Browser.Dom.selectionNonEmpty();
 	},
-		
+	
 	selectionAncestor: function () {
 		return BetaJS.Browser.Dom.selectionAncestor();
 	},
@@ -121,18 +122,17 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 	},
 
 	selectionHasParentElement : function(element) {
-		if (!this.hasFocus())
+		if (!this.isSelected())
 			return;
 		if (this.selectionAncestor().parents(this._selector + " " + element).length > 0)
 			return true;
 		return BetaJS.Objs.all(this.selectionLeaves(), function (node) {
-			return (node.parents(this._selector + " " + element).length > 0) ||
-			       (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase());
+			return BetaJS.Browser.Dom.elementHasAncestorTag(node, element, this._selector);
 		}, this);
 	},
 	
 	selectionSetParentElement: function (element, value) {
-		if (!this.hasFocus())
+		if (!this.isSelected())
 			return;
 		var has = this.selectionHasParentElement(element);
 		if (BetaJS.Types.is_undefined(value))
@@ -145,16 +145,25 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 			this.selectionRemoveParentElement(element);
 	},
 
-	selectionAddParentElement : function(element) {
-		if (!this.hasFocus())
+	selectionAddParentElement : function (element) {
+		if (!this.isSelected())
 			return;
-		// TODO
+		BetaJS.Browser.Dom.selectionSplitOffsets();
+		var nodes = BetaJS.Browser.Dom.selectionNodes();
+		for (var i = 0; i < nodes.length; ++i)
+			if (!BetaJS.Browser.Dom.elementHasAncestorTag(nodes[i], element, this._selector))
+				nodes[i] = nodes[i].wrap("<" + element + "></" + element + ">");
+		BetaJS.Browser.Dom.selectRange(nodes[0], nodes[nodes.length - 1]);
 	},
 
 	selectionRemoveParentElement : function(element) {
-		if (!this.hasFocus())
+		if (!this.isSelected())
 			return;
-		// TODO
+		BetaJS.Browser.Dom.selectionSplitOffsets();
+		var nodes = BetaJS.Browser.Dom.selectionNodes();
+		for (var i = 0; i < nodes.length; ++i)
+			BetaJS.Browser.Dom.remove_tag_from_parent_path(nodes[i], element, this._selector);
+		BetaJS.Browser.Dom.selectRange(nodes[0], nodes[nodes.length - 1]);
 	},
 
 	caretNode : function() {
@@ -189,28 +198,13 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 	__caretCharacterAdded: function () {
 		var yesTags = [];
 		var noTags = [];
-		BetaJS.Objs.iter(this.__caretElementStack, function (value, tag) {
-			if (value)
-				yesTags.push(tag);
-			else
-				noTags.push(tag);
-		});
-		var offset = this.caretNodeOffset();
-		var leftNode = this.caretNode();
-		var parent = leftNode.parent().get(0); 
-		var left = leftNode.get(0);
-		var right = left.splitText(offset);
-		var current = left.splitText(offset - 1);
-		var inner = current;
-		var content = current.data;
-		for (var i = 0; i < yesTags.length; ++i) {
-			var newElement = document.createElement(yesTags[i]);
-			newElement.appendChild(current);
-			current = newElement;
-			parent.insertBefore(current, right);
-		}
-		BetaJS.Browser.Dom.selectNode(inner, 1);
-		// TODO: noTags
+		BetaJS.Objs.iter(this.__caretElementStack, function (value, tag) { (value ? yesTags : noTags).push(tag); });
+		var node = BetaJS.Browser.Dom.splitNode(this.caretNode(), this.caretNodeOffset() - 1, this.caretNodeOffset());
+		for (var i = 0; i < noTags.length; ++i)
+			BetaJS.Browser.Dom.remove_tag_from_parent_path(node, noTags[i], this._selector);
+		for (var i = 0; i < yesTags.length; ++i)
+			node = node.wrap("<" + yesTags[i] + "></" + yesTags[i] + ">");			
+		BetaJS.Browser.Dom.selectNode(node, 1);
 	},
 	
 	__caretClearElementStack: function () {
@@ -223,7 +217,7 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 		this.__caretElementStack[element] = false;
 		this.trigger("element");
 	}
-
+	
 }); 
 BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 
@@ -282,7 +276,6 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				}
 			},
 
-			
 			bold_button: {
 				type: "ButtonView",
 				parent: "toolbar",
@@ -293,6 +286,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 				events: {
 					"click": function () {
+						this.domain.ns.editor_view.focus();
 						this.domain.ns.editor_view.setParentElement("strong");
 					}
 				},
@@ -312,6 +306,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 				events: {
 					"click": function () {
+						this.domain.ns.editor_view.focus();
 						this.domain.ns.editor_view.setParentElement("i");
 					}
 				},
