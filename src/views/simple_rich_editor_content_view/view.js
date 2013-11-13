@@ -8,42 +8,47 @@ BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 		this._inherited(BetaJS.Views.SimpleRichEditorContentView, "constructor", options);
 		this._setOptionProperty(options, "content", "");
 		this._selector = "[data-view-id='" + this.cid() + "']";
-		this.__wasKeyPress = false;
+		this.__wasKeyInput = false;
+		this.on("select", function () { this.trigger("element"); }, this);
 	},
 	
+	_global_events: [{
+		"selectionchange": "__select",
+	}],
+			
 	_events : [{
-		"blur [data-selector='inner']" : "__change",
-		"keyup [data-selector='inner']" : "__change",
-		"paste [data-selector='inner']" : "__change",
-		"keypress [data-selector='inner']" : "__key_press",
-		"keyup [data-selector='inner']" : "__key_up",
-		"click  [data-selector='inner']" : "__click",
+		"blur [data-selector='inner']" : "__leave",
+		"focus [data-selector='inner']": "__enter",
+		"input [data-selector='inner']": "__change",
+		"keypress [data-selector='inner']": "__keypress",
 	}],
 	
-	__key_press: function (e) {
-		this.__wasKeyPress = true;
-		if (e.which !== 0)
-			this.trigger("insert");
-		this.trigger("select");
-		this.trigger("element");
-	},
-	
-	__key_up: function () {
-		if (!this.__wasKeyPress) {
-			this.trigger("insert");
+	__select: function () {
+		if (this.hasFocus())
 			this.trigger("select");
-			this.trigger("element");			
-		}
-		this.__wasKeyPress = false;
 	},
 	
-	__click: function () {
-		this.trigger("select");
-		this.trigger("element");
+	__leave: function () {
+		this.trigger("leave");
+	},
+
+	__enter: function () {
+		this.trigger("enter");
 	},
 	
-	__change : function() {
+	__change: function () {
 		this.set("content", this._editor.html());
+		this.trigger("change");
+		if (this.__wasKeyInput) {
+			this.__wasKeyInput = false;
+			this.trigger("keyinput");
+		}
+	},
+
+	__keypress: function (e) {
+		this.__wasKeyInput = false;
+		if (e.which !== 0)
+			this.__wasKeyInput = true;			
 	},
 	
 	_render : function() {
@@ -54,6 +59,10 @@ BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 	hasFocus: function () {
 		return (document.activeElement == this._editor.get(0)) ||
 		       (BetaJS.$(document.activeElement).parents(this._selector).length > 0);
+	},
+	
+	focus: function () {
+		this._editor.focus();
 	}
 	
 });

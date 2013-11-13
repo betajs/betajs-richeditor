@@ -55,7 +55,6 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				}
 			},
 
-			
 			bold_button: {
 				type: "ButtonView",
 				parent: "toolbar",
@@ -66,6 +65,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 				events: {
 					"click": function () {
+						this.domain.ns.editor_view.focus();
 						this.domain.ns.editor_view.setParentElement("strong");
 					}
 				},
@@ -85,6 +85,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 				events: {
 					"click": function () {
+						this.domain.ns.editor_view.focus();
 						this.domain.ns.editor_view.setParentElement("i");
 					}
 				},
