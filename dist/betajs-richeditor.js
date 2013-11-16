@@ -1,5 +1,5 @@
 /*!
-  betajs-codemirror - v0.0.1 - 2013-11-13
+  betajs-codemirror - v0.0.1 - 2013-11-15
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
@@ -127,7 +127,7 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 		if (this.selectionAncestor().parents(this._selector + " " + element).length > 0)
 			return true;
 		return BetaJS.Objs.all(this.selectionLeaves(), function (node) {
-			return BetaJS.Browser.Dom.elementHasAncestorTag(node, element, this._selector);
+			return node.closest(this._selector + " " + element).length > 0;
 		}, this);
 	},
 	
@@ -151,7 +151,7 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 		BetaJS.Browser.Dom.selectionSplitOffsets();
 		var nodes = BetaJS.Browser.Dom.selectionNodes();
 		for (var i = 0; i < nodes.length; ++i)
-			if (!BetaJS.Browser.Dom.elementHasAncestorTag(nodes[i], element, this._selector))
+			if (nodes[i].closest(this._selector + " " + element).length == 0)
 				nodes[i] = nodes[i].wrap("<" + element + "></" + element + ">");
 		BetaJS.Browser.Dom.selectRange(nodes[0], nodes[nodes.length - 1]);
 	},

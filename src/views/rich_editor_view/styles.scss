@@ -20,13 +20,15 @@ $contrast: rgba(0, 0, 0, 0.1);
 .rich-editor-view button {
   height: $controlboxheight;
   min-width: $controlboxheight;
-  background: $background;
+  padding: 0 $controlboxmargin - 1px;
+  margin: 0;
   overflow: hidden;
   text-align: center;
   
   border: 1px solid transparent;
   border-radius: 3px;
   font-size: 14px;
+  background: $background;
   cursor: pointer;
 }
 .rich-editor-view button.selected {
