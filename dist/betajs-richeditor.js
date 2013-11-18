@@ -1,5 +1,5 @@
 /*!
-  betajs-codemirror - v0.0.1 - 2013-11-15
+  betajs-codemirror - v0.0.1 - 2013-11-18
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
@@ -19,7 +19,15 @@ BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 		this._setOptionProperty(options, "content", "");
 		this._selector = "[data-view-id='" + this.cid() + "']";
 		this.__wasKeyInput = false;
+		this.__enableContentChange = false;
 		this.on("select", function () { this.trigger("element"); }, this);
+		this.on("change:content", function (value) {
+			if (this._editor && this.__enableContentChange)
+				this._editor.html(value);
+		}, this);
+		this.set("text", this.computed(function () {
+			return BetaJS.Strings.strip_html(this.get("content") || "");
+		}, ["content"]));
 	},
 	
 	_global_events: [{
@@ -47,8 +55,9 @@ BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 	},
 	
 	__change: function () {
+		this.__enableContentChange = false;
 		this.set("content", this._editor.html());
-		this.trigger("change");
+		this.__enableContentChange = true;
 		if (this.__wasKeyInput) {
 			this.__wasKeyInput = false;
 			this.trigger("keyinput");
@@ -325,9 +334,15 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 				events: {
 					"click": function () {
-						alert("Underline");
+						this.domain.ns.editor_view.focus();
+						this.domain.ns.editor_view.setParentElement("u");
 					}
 				},
+				listeners: {
+					"element-slow": function () {
+						this.set("selected", this.domain.ns.editor_view.hasParentElement("u"));
+					}
+				}
 			},
 			
 			seperator2: {

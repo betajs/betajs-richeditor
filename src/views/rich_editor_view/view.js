@@ -104,9 +104,15 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				},
 				events: {
 					"click": function () {
-						alert("Underline");
+						this.domain.ns.editor_view.focus();
+						this.domain.ns.editor_view.setParentElement("u");
 					}
 				},
+				listeners: {
+					"element-slow": function () {
+						this.set("selected", this.domain.ns.editor_view.hasParentElement("u"));
+					}
+				}
 			},
 			
 			seperator2: {
