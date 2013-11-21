@@ -44,7 +44,7 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 
 	selectionHasParentElement : function(element) {
 		if (!this.isSelected())
-			return;
+			return false;
 		if (this.selectionAncestor().parents(this._selector + " " + element).length > 0)
 			return true;
 		return BetaJS.Objs.all(this.selectionLeaves(), function (node) {
@@ -71,9 +71,10 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 			return;
 		BetaJS.Browser.Dom.selectionSplitOffsets();
 		var nodes = BetaJS.Browser.Dom.selectionNodes();
-		for (var i = 0; i < nodes.length; ++i)
-			if (nodes[i].closest(this._selector + " " + element).length == 0)
+		for (var i = 0; i < nodes.length; ++i) {
+			if (nodes[i].closest(this._selector + " " + element).length === 0)
 				nodes[i] = nodes[i].wrap("<" + element + "></" + element + ">");
+		}
 		BetaJS.Browser.Dom.selectRange(nodes[0], nodes[nodes.length - 1]);
 	},
 
@@ -121,9 +122,10 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 		var noTags = [];
 		BetaJS.Objs.iter(this.__caretElementStack, function (value, tag) { (value ? yesTags : noTags).push(tag); });
 		var node = BetaJS.Browser.Dom.splitNode(this.caretNode(), this.caretNodeOffset() - 1, this.caretNodeOffset());
-		for (var i = 0; i < noTags.length; ++i)
+		var i = null;
+		for (i = 0; i < noTags.length; ++i)
 			BetaJS.Browser.Dom.remove_tag_from_parent_path(node, noTags[i], this._selector);
-		for (var i = 0; i < yesTags.length; ++i)
+		for (i = 0; i < yesTags.length; ++i)
 			node = node.wrap("<" + yesTags[i] + "></" + yesTags[i] + ">");			
 		BetaJS.Browser.Dom.selectNode(node, 1);
 	},

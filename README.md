@@ -9,6 +9,16 @@ BetaJS Framework (https://github.com/betajs/betajs).
 - Victor Lingenthal
 
 
+## Roadmap
+- Font Selection & Alignment (needs dom tags with filters)
+- List Wrapping for bullet points and lists
+- Normalization
+	- Getting rid of useless tags via $('u').find('u').unwrap();
+	- Getting rid of evil tags (whitelist / blacklist) and evil attributes (links)
+- Links
+- Auto-Linking
+
+
 ## License
 MIT Software License.
 

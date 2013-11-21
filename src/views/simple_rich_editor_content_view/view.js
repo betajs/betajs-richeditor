@@ -21,14 +21,14 @@ BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 	},
 	
 	_global_events: [{
-		"selectionchange": "__select",
+		"selectionchange": "__select"
 	}],
 			
 	_events : [{
 		"blur [data-selector='inner']" : "__leave",
 		"focus [data-selector='inner']": "__enter",
 		"input [data-selector='inner']": "__change",
-		"keypress [data-selector='inner']": "__keypress",
+		"keypress [data-selector='inner']": "__keypress"
 	}],
 	
 	__select: function () {

@@ -20,31 +20,31 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 					el_classes: "toolbar"
 				}
 			},
-			
+			/*
 			font_style_dropdown: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "Font",
+					label: "Font"
 				},
 				events: {
 					"click": function () {
 						alert("Dropdown change font-style");
 					}
-				},
+				}
 			},
 			
 			font_size_dropdown: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "16",
+					label: "16"
 				},
 				events: {
 					"click": function () {
 						alert("Dropdown change font-size");
 					}
-				},
+				}
 			},
 			
 			seperator1: {
@@ -54,7 +54,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 					el_classes: "seperator"
 				}
 			},
-
+			*/
 			bold_button: {
 				type: "ButtonView",
 				parent: "toolbar",
@@ -100,7 +100,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-underline",
+					children_classes: "icon-underline"
 				},
 				events: {
 					"click": function () {
@@ -114,7 +114,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 					}
 				}
 			},
-			
+			/*
 			seperator2: {
 				type: "BetaJS.Views.View",
 				parent: "toolbar",
@@ -127,26 +127,26 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-list-ul",
+					children_classes: "icon-list-ul"
 				},
 				events: {
 					"click": function () {
 						alert("Bulletpoint");
 					}
-				},
+				}
 			},
 						
 			numberedlist_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-list-ol",
+					children_classes: "icon-list-ol"
 				},
 				events: {
 					"click": function () {
 						alert("Numberedlist");
 					}
-				},
+				}
 			},
 						
 			seperator3: {
@@ -161,54 +161,54 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-align-left",
+					children_classes: "icon-align-left"
 				},
 				events: {
 					"click": function () {
 						alert("text-align: left");
 					}
-				},
+				}
 			},
 			
 			center_align_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-align-center",
+					children_classes: "icon-align-center"
 				},
 				events: {
 					"click": function () {
 						alert("text-align: center");
 					}
-				},
+				}
 			},
 			
 			right_align_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-align-right",
+					children_classes: "icon-align-right"
 				},
 				events: {
 					"click": function () {
 						alert("text-align: right");
 					}
-				},
+				}
 			},
 			
 			justify_align_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-align-justify",
+					children_classes: "icon-align-justify"
 				},
 				events: {
 					"click": function () {
 						alert("text-align: justify");
 					}
-				},
+				}
 			},
-			
+			*/
 			editor_view: {
 				type: "BetaJS.Views.RichEditorContentView",
 				el: ".editbox",

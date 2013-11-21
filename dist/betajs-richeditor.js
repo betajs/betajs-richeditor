@@ -1,5 +1,5 @@
 /*!
-  betajs-codemirror - v0.0.1 - 2013-11-18
+  betajs-codemirror - v0.0.1 - 2013-11-21
   Copyright (c) Victor Lingenthal
   MIT Software License.
 */
@@ -31,14 +31,14 @@ BetaJS.Views.View.extend("BetaJS.Views.SimpleRichEditorContentView", {
 	},
 	
 	_global_events: [{
-		"selectionchange": "__select",
+		"selectionchange": "__select"
 	}],
 			
 	_events : [{
 		"blur [data-selector='inner']" : "__leave",
 		"focus [data-selector='inner']": "__enter",
 		"input [data-selector='inner']": "__change",
-		"keypress [data-selector='inner']": "__keypress",
+		"keypress [data-selector='inner']": "__keypress"
 	}],
 	
 	__select: function () {
@@ -132,7 +132,7 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 
 	selectionHasParentElement : function(element) {
 		if (!this.isSelected())
-			return;
+			return false;
 		if (this.selectionAncestor().parents(this._selector + " " + element).length > 0)
 			return true;
 		return BetaJS.Objs.all(this.selectionLeaves(), function (node) {
@@ -159,9 +159,10 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 			return;
 		BetaJS.Browser.Dom.selectionSplitOffsets();
 		var nodes = BetaJS.Browser.Dom.selectionNodes();
-		for (var i = 0; i < nodes.length; ++i)
-			if (nodes[i].closest(this._selector + " " + element).length == 0)
+		for (var i = 0; i < nodes.length; ++i) {
+			if (nodes[i].closest(this._selector + " " + element).length === 0)
 				nodes[i] = nodes[i].wrap("<" + element + "></" + element + ">");
+		}
 		BetaJS.Browser.Dom.selectRange(nodes[0], nodes[nodes.length - 1]);
 	},
 
@@ -209,9 +210,10 @@ BetaJS.Views.SimpleRichEditorContentView.extend("BetaJS.Views.RichEditorContentV
 		var noTags = [];
 		BetaJS.Objs.iter(this.__caretElementStack, function (value, tag) { (value ? yesTags : noTags).push(tag); });
 		var node = BetaJS.Browser.Dom.splitNode(this.caretNode(), this.caretNodeOffset() - 1, this.caretNodeOffset());
-		for (var i = 0; i < noTags.length; ++i)
+		var i = null;
+		for (i = 0; i < noTags.length; ++i)
 			BetaJS.Browser.Dom.remove_tag_from_parent_path(node, noTags[i], this._selector);
-		for (var i = 0; i < yesTags.length; ++i)
+		for (i = 0; i < yesTags.length; ++i)
 			node = node.wrap("<" + yesTags[i] + "></" + yesTags[i] + ">");			
 		BetaJS.Browser.Dom.selectNode(node, 1);
 	},
@@ -250,31 +252,31 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 					el_classes: "toolbar"
 				}
 			},
-			
+			/*
 			font_style_dropdown: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "Font",
+					label: "Font"
 				},
 				events: {
 					"click": function () {
 						alert("Dropdown change font-style");
 					}
-				},
+				}
 			},
 			
 			font_size_dropdown: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					label: "16",
+					label: "16"
 				},
 				events: {
 					"click": function () {
 						alert("Dropdown change font-size");
 					}
-				},
+				}
 			},
 			
 			seperator1: {
@@ -284,7 +286,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 					el_classes: "seperator"
 				}
 			},
-
+			*/
 			bold_button: {
 				type: "ButtonView",
 				parent: "toolbar",
@@ -330,7 +332,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-underline",
+					children_classes: "icon-underline"
 				},
 				events: {
 					"click": function () {
@@ -344,7 +346,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 					}
 				}
 			},
-			
+			/*
 			seperator2: {
 				type: "BetaJS.Views.View",
 				parent: "toolbar",
@@ -357,26 +359,26 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-list-ul",
+					children_classes: "icon-list-ul"
 				},
 				events: {
 					"click": function () {
 						alert("Bulletpoint");
 					}
-				},
+				}
 			},
 						
 			numberedlist_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-list-ol",
+					children_classes: "icon-list-ol"
 				},
 				events: {
 					"click": function () {
 						alert("Numberedlist");
 					}
-				},
+				}
 			},
 						
 			seperator3: {
@@ -391,54 +393,54 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.RichEditorView", {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-align-left",
+					children_classes: "icon-align-left"
 				},
 				events: {
 					"click": function () {
 						alert("text-align: left");
 					}
-				},
+				}
 			},
 			
 			center_align_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-align-center",
+					children_classes: "icon-align-center"
 				},
 				events: {
 					"click": function () {
 						alert("text-align: center");
 					}
-				},
+				}
 			},
 			
 			right_align_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-align-right",
+					children_classes: "icon-align-right"
 				},
 				events: {
 					"click": function () {
 						alert("text-align: right");
 					}
-				},
+				}
 			},
 			
 			justify_align_button: {
 				type: "ButtonView",
 				parent: "toolbar",
 				options: {
-					children_classes: "icon-align-justify",
+					children_classes: "icon-align-justify"
 				},
 				events: {
 					"click": function () {
 						alert("text-align: justify");
 					}
-				},
+				}
 			},
-			
+			*/
 			editor_view: {
 				type: "BetaJS.Views.RichEditorContentView",
 				el: ".editbox",
