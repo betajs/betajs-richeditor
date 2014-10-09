@@ -1,7 +1,7 @@
 /*!
-  betajs-codemirror - v0.0.1 - 2013-12-05
-  Copyright (c) Victor Lingenthal
-  MIT Software License.
+betajs-richeditor - v1.0.0 - 2014-10-10
+Copyright (c) Victor Lingenthal
+MIT Software License.
 */
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['rich-editor-view-template'] = '  <div class="rich-editor-view">    <div class="controlbox">       <div class="button" style="float: left"><div class="buttonicon icon ui-icon-power"></div></div>       <div class="button" style="float: left"><div class="buttonicon icon ui-icon-phone"></div></div>       <div class="button" style="float: left"><div class="buttonicon icon ui-icon-apple"></div></div>   </div>   <div class="editbox">   </div>  </div> ';

@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": ";;;;;;AAQA,iBAAkB;EAChB,UAAU,EANP,OAAO;;AAQZ,6BAA8B;EAC5B,YAAY,EAAE,KAAK;EACnB,YAAY,EATH,OAAO;;AAWlB,+BAAgC;EAC9B,UAAU,EAZD,OAAO;;AAclB,0BAA2B;EACzB,UAAU,EAAE,KAAK;EACjB,YAAY,EAAE,KAAK;EACnB,YAAY,EAjBH,OAAO",
+"sources": ["../src/assets/theme-main.scss"],
+"names": [],
+"file": "betajs-richeditor.css"
+}

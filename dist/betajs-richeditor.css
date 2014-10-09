@@ -1,16 +1,11 @@
 /*
-  betajs-codemirror - v0.0.1 - 2013-12-05
-  Copyright (c) Victor Lingenthal
-  MIT Software License.
-*/
-/*
  * Variables
  */
 /*
  * Main
  */
 .rich-editor-view {
-  background: #f3f3f3; }
+  background: #F3F3F3; }
 
 .rich-editor-view .controlbox {
   border-style: solid;
@@ -24,83 +19,4 @@
   border-style: solid;
   border-color: #e5e5e5; }
 
-/*
- * Variables
- */
-/*
- * Rich Editor Toolbar
- */
-.rich-editor-view {
-  background: whitesmoke; }
-
-.rich-editor-view .toolbar {
-  margin: 5px;
-  height: 30px;
-  border-width: 1px; }
-
-.rich-editor-view button {
-  height: 30px;
-  min-width: 30px;
-  padding: 0 4px;
-  margin: 0;
-  overflow: hidden;
-  text-align: center;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  font-size: 14px;
-  background: whitesmoke;
-  cursor: pointer; }
-
-.rich-editor-view button.selected {
-  border: 1px solid yellow; }
-
-.rich-editor-view .seperator {
-  height: 30px;
-  width: 1px;
-  margin: 0px 5px;
-  background: rgba(0, 0, 0, 0.1); }
-
-.rich-editor-view button:hover {
-  border: 1px solid rgba(0, 0, 0, 0.1); }
-
-.rich-editor-view .bold {
-  font-weight: bold; }
-
-.rich-editor-view .italic {
-  font-style: italic; }
-
-.rich-editor-view .underline {
-  text-decoration: underline; }
-
-/*
- * Rich Editor Editor
- */
-.rich-editor-view .textareadiv {
-  position: absolute;
-  top: 40px;
-  right: 0px;
-  bottom: 0px;
-  left: 0px;
-  margin: 3px;
-  resize: none;
-  overflow: scroll; }
-
-/*
- * Title Dropdown
- */
-.page-head .overlay-container-class {
-  width: 170px;
-  font-size: 13px; }
-
-.page-head .logo-dropdown button {
-  text-align: left;
-  width: 100%; }
-
-/*
- * Settings Dropdown
- */
-.page-head .settings-overlay {
-  width: 200px; }
-
-.simple-rich-editor-content-view {
-  background: white; }
+/*# sourceMappingURL=betajs-richeditor.css.map */
