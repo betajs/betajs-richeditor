@@ -6,18 +6,44 @@
   "contributors": [
   	"Victor Lingenthal"
   ],
-  "license": "MIT",
-  "devDependencies": {
-    "grunt": "",
-    "grunt-contrib-jshint": "",
-    "grunt-contrib-nodeunit": "",
-    "grunt-contrib-concat": "",
-    "grunt-contrib-sass": "",
-    "grunt-contrib-uglify": "",
-    "grunt-shell": "",
-    "grunt-contrib-cssmin": "",
-    "grunt-contrib-clean": "",
-    "grunt-betajs-templates": "git://github.com/betajs/grunt-betajs-templates.git",
-    "grunt-newer": ""
-  }
+	"license": "MIT",
+	"devDependencies": {
+		"grunt": "",
+		"grunt-contrib-jshint": "",
+		"grunt-contrib-nodeunit": "",
+		"grunt-contrib-concat": "",
+		"grunt-contrib-uglify": "",
+		"grunt-contrib-clean": "",
+		"grunt-preprocess": "",
+		"grunt-git-revision-count": "",
+		"grunt-closure-tools": "",
+		"grunt-node-qunit": "",
+		"grunt-contrib-jshint": "",
+		"grunt-wget": "",
+		"grunt-jsdoc": "beta",
+		"grunt-shell": "",
+		"grunt-template": "",
+		"grunt-contrib-csslint": ""
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/betajs/betajs-richeditor.git"
+	},
+	"meta": {
+		"status": "Active, In Development",
+		"weakDependencies": {
+			"betajs-scoped": "https://github.com/betajs/betajs-scoped"
+		},
+		"dependencies": {
+			"betajs": "https://github.com/betajs/betajs",
+			"betajs-browser": "https://github.com/betajs/betajs-browser",
+			"betajs-dynamics": "https://github.com/betajs/betajs-dynamics"
+		},
+		"cdn": {
+			"betajs-richeditor.js": "http://cdn.rawgit.com/betajs/betajs-richeditor/master/dist/betajs-richeditor.js",
+			"betajs-richeditor.min.js": "http://cdn.rawgit.com/betajs/betajs-richeditor/master/dist/betajs-richeditor.min.js",
+			"betajs-richeditor-noscoped.js": "http://cdn.rawgit.com/betajs/betajs-richeditor/master/dist/betajs-richeditor-noscoped.js",
+			"betajs-richeditor-noscoped.min.js": "http://cdn.rawgit.com/betajs/betajs-richeditor/master/dist/betajs-richeditor-noscoped.min.js"
+		}
+	}
 }
