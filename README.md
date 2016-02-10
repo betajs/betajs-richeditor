@@ -1,4 +1,6 @@
-# betajs-richeditor 1.0.0
+# betajs-richeditor 1.0.2
+[![Code Climate](https://codeclimate.com/github/betajs/betajs-richeditor/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-richeditor)
+
 
 BetaJS-Richeditor is a rich editor plugin based on content editable using the BetaJS Framework.
 
@@ -13,6 +15,9 @@ Active, In Development
 | Homepage   | [http://betajs.com](http://betajs.com) |
 | Git        | [git://github.com/betajs/betajs-richeditor.git](git://github.com/betajs/betajs-richeditor.git) |
 | Repository | [http://github.com/betajs/betajs-richeditor](http://github.com/betajs/betajs-richeditor) |
+| Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
+| Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
+
 
 
 
@@ -47,6 +52,6 @@ Active, In Development
 
 ## License
 
-MIT
+Apache 2.0
 
 

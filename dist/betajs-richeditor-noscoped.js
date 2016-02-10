@@ -1,7 +1,7 @@
 /*!
-betajs-richeditor - v1.0.0 - 2015-08-31
+betajs-richeditor - v1.0.2 - 2016-02-10
 Copyright (c) Victor Lingenthal
-MIT Software License.
+Apache 2.0 Software License.
 */
 (function () {
 
@@ -17,7 +17,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "15a5c98c-e44a-cb29-7593-2577c3ce3753",		       
-		version: '27.1441069313511'
+		version: '29.1455125701271'
 	};
 });
 
