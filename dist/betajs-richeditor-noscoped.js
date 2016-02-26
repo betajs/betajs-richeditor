@@ -1,26 +1,22 @@
 /*!
-betajs-richeditor - v1.0.2 - 2016-02-10
+betajs-richeditor - v1.0.3 - 2016-02-26
 Copyright (c) Victor Lingenthal
-Apache 2.0 Software License.
+Apache-2.0 Software License.
 */
+
 (function () {
-
 var Scoped = this.subScope();
-
-Scoped.binding("module", "global:BetaJS.Dynamics.RichEditor");
-Scoped.binding("base", "global:BetaJS");
-Scoped.binding("dynamics", "global:BetaJS.Dynamics");
-Scoped.binding("browser", "global:BetaJS.Browser");
-
-Scoped.binding("jquery", "global:jQuery");
-
+Scoped.binding('module', 'global:BetaJS.Dynamics.RichEditor');
+Scoped.binding('base', 'global:BetaJS');
+Scoped.binding('browser', 'global:BetaJS.Browser');
+Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
+Scoped.binding('jquery', 'global:jQuery');
 Scoped.define("module:", function () {
 	return {
-		guid: "15a5c98c-e44a-cb29-7593-2577c3ce3753",		       
-		version: '29.1455125701271'
-	};
+    "guid": "15a5c98c-e44a-cb29-7593-2577c3ce3753",
+    "version": "31.1456497896136"
+};
 });
-
 Scoped.define("module:Richeditor", [
     "dynamics:Dynamic",
     "jquery:",
