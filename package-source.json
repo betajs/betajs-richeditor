@@ -6,6 +6,7 @@
   	"Victor Lingenthal"
   ],
 	"devDependencies": {
+    	"lodash": "",
 		"grunt": "",
 		"grunt-contrib-jshint": "",
 		"grunt-contrib-concat": "",
