@@ -1,5 +1,5 @@
 /*!
-betajs-richeditor - v1.0.3 - 2016-02-26
+betajs-richeditor - v1.0.3 - 2016-10-22
 Copyright (c) Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -14,7 +14,7 @@ Scoped.binding('jquery', 'global:jQuery');
 Scoped.define("module:", function () {
 	return {
     "guid": "15a5c98c-e44a-cb29-7593-2577c3ce3753",
-    "version": "31.1456497896136"
+    "version": "34.1477153864185"
 };
 });
 Scoped.define("module:Richeditor", [
@@ -22,9 +22,10 @@ Scoped.define("module:Richeditor", [
     "jquery:",
     "base:Strings",
     "browser:Dom",
+    "browser:Selection",
     "base:Objs",
     "base:Types"
-], function (Dynamic, $, Strings, Dom, Objs, Types, scoped) {
+], function (Dynamic, $, Strings, Dom, Selection, Objs, Types, scoped) {
 	
 	var Cls = Dynamic.extend({scoped: scoped}, function (inherited) {
 		return {
@@ -110,7 +111,7 @@ Scoped.define("module:Richeditor", [
 			},
 			
 			caretNodeOffset: function () {
-				return Dom.selectionEndOffset();
+				return Selection.selectionEndOffset();
 			},
 
 			hasParentElement : function(element) {
@@ -125,19 +126,19 @@ Scoped.define("module:Richeditor", [
 			},
 
 			isSelected : function() {
-				return Dom.selectionContained(this.$editor()) && Dom.selectionNonEmpty();
+				return Selection.selectionContained(this.$editor().get(0)) && Selection.selectionNonEmpty();
 			},
 			
 			selectionAncestor: function () {
-				return Dom.selectionAncestor();
+				return $(Selection.selectionAncestor());
 			},
 			
 			selection: function () {
-				return Dom.selectionNodes();
+				return $(Selection.selectionNodes());
 			},
 				
 			selectionLeaves: function () {
-				return Dom.selectionLeaves();
+				return $(Selection.selectionLeaves());
 			},
 
 			selectionHasParentElement : function(element) {
@@ -167,27 +168,27 @@ Scoped.define("module:Richeditor", [
 			selectionAddParentElement : function (element) {
 				if (!this.isSelected())
 					return;
-				Dom.selectionSplitOffsets();
-				var nodes = Dom.selectionNodes();
+				Selection.selectionSplitOffsets();
+				var nodes = $(Selection.selectionNodes());
 				for (var i = 0; i < nodes.length; ++i) {
 					if (nodes[i].closest(this.$editor().find(element)).length === 0)
 						nodes[i] = nodes[i].wrap("<" + element + "></" + element + ">");
 				}
-				Dom.selectRange(nodes[0], nodes[nodes.length - 1]);
+				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
 			},
 
 			selectionRemoveParentElement : function(element) {
 				if (!this.isSelected())
 					return;
-				Dom.selectionSplitOffsets();
-				var nodes = Dom.selectionNodes();
+				Selection.selectionSplitOffsets();
+				var nodes = $(Selection.selectionNodes());
 				for (var i = 0; i < nodes.length; ++i)
 					Dom.remove_tag_from_parent_path(nodes[i], element, this.$editor());
-				Dom.selectRange(nodes[0], nodes[nodes.length - 1]);
+				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
 			},
 
 			caretNode : function() {
-				return Dom.selectionStartNode();
+				return $(Selection.selectionStartNode());
 			},
 
 			caretHasParentElement : function(element) {
@@ -219,13 +220,13 @@ Scoped.define("module:Richeditor", [
 				var yesTags = [];
 				var noTags = [];
 				Objs.iter(this.__caretElementStack, function (value, tag) { (value ? yesTags : noTags).push(tag); });
-				var node = Dom.splitNode(this.caretNode(), this.caretNodeOffset() - 1, this.caretNodeOffset());
+				var node = $(Dom.splitNode(this.caretNode().get(0), this.caretNodeOffset() - 1, this.caretNodeOffset()));
 				var i = null;
 				for (i = 0; i < noTags.length; ++i)
 					Dom.remove_tag_from_parent_path(node, noTags[i], this.$editor());
 				for (i = 0; i < yesTags.length; ++i)
 					node = node.wrap("<" + yesTags[i] + "></" + yesTags[i] + ">");			
-				Dom.selectNode(node, 1);
+				Selection.selectNode(node.get(0), 1);
 			},
 			
 			__caretClearElementStack: function () {

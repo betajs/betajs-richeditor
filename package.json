@@ -15,13 +15,13 @@
         "url": "https://github.com/betajs/betajs-richeditor/issues"
     },
     "name": "betajs-richeditor",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "BetaJS-Richeditor is a rich editor plugin based on content editable using the BetaJS Framework.",
     "contributors": [
         "Victor Lingenthal"
     ],
     "devDependencies": {
-    	"lodash": "",
+        "lodash": "",
         "grunt": "",
         "grunt-contrib-jshint": "",
         "grunt-contrib-concat": "",

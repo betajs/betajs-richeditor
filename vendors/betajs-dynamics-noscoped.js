@@ -1,27 +1,23 @@
 /*!
-betajs-dynamics - v0.0.35 - 2016-02-07
-Copyright (c) Oliver Friedmann,Victor Lingenthal
-Apache 2.0 Software License.
+betajs-dynamics - v0.0.69 - 2016-10-17
+Copyright (c) Victor Lingenthal,Oliver Friedmann
+Apache-2.0 Software License.
 */
+
 (function () {
-
 var Scoped = this.subScope();
-
-Scoped.binding("module", "global:BetaJS.Dynamics");
-Scoped.binding("base", "global:BetaJS");
-Scoped.binding("browser", "global:BetaJS.Browser");
-
-Scoped.binding("jquery", "global:jQuery");
-
+Scoped.binding('module', 'global:BetaJS.Dynamics');
+Scoped.binding('base', 'global:BetaJS');
+Scoped.binding('browser', 'global:BetaJS.Browser');
+Scoped.binding('jquery', 'global:jQuery');
 Scoped.define("module:", function () {
 	return {
-		guid: "d71ebf84-e555-4e9b-b18a-11d74fdcefe2",
-		version: '219.1454870118315'
-	};
+    "guid": "d71ebf84-e555-4e9b-b18a-11d74fdcefe2",
+    "version": "270.1476760819985"
+};
 });
-
-Scoped.assumeVersion("base:version", 444);
-Scoped.assumeVersion("browser:version", 65);
+Scoped.assumeVersion('base:version', 531);
+Scoped.assumeVersion('browser:version', 79);
 Scoped.define("module:Data.Mesh", [
 	    "base:Class",
 	    "base:Events.EventsMixin",
@@ -210,7 +206,7 @@ Scoped.define("module:Data.Mesh", [
 					return base;
 				var splt = Strings.splitFirst(tail, ".");
 				var hd = head ? head + "." + splt.head : splt.head;
-				if (Properties.is_instance_of(current)) {
+				if (Properties.is_instance_of(current) && !current.destroyed()) {
 					if (current.has(splt.head))
 						return this._sub_navigate(current, splt.head, splt.tail, current, current.get(splt.head));
 					else if (splt.head in current)
@@ -293,9 +289,11 @@ Scoped.define("module:Data.Mesh", [
 	}]);
 });
 Scoped.define("module:Parser", [
-    "base:Types", "base:Objs", "base:JavaScript", "base:Strings"
-], function (Types, Objs, JavaScript, Strings) {
-	return {		
+    "base:Types", "base:Objs", "base:JavaScript"
+], function (Types, Objs, JavaScript) {
+	return {
+		
+		__cache: {},		
 		
 		parseText: function (text) {
 			if (!text)
@@ -337,34 +335,41 @@ Scoped.define("module:Parser", [
 					});
 					return s;
 				},
-				dependencies: Objs.keys(dependencies)
+				dependencies: Object.keys(dependencies)
 			};
 		},
 		
 		parseCode: function (code) {
+			var result = this.__cache[code];
+			if (result)
+				return result;
 			var bidirectional = false;
-			if (code.charAt(0) == "=") {
+			var c = code;
+			if (c.charAt(0) == "=") {
 				bidirectional = true;
-				code = code.substring(1);
+				c = c.substring(1);
 			}
-			var i = code.indexOf("::");
+			var i = c.indexOf("::");
 			var args = null;
 			if (i >= 0) {
-				args = Strings.trim(code.substring(0, i));
-				code = code.substring(i + 2);
+				args = c.substring(0, i).trim();
+				c = c.substring(i + 2);
 			}
-			return {
+			result = {
 				bidirectional: bidirectional,
 				args: args,
-				variable: bidirectional ? code : null,
+				variable: bidirectional ? c : null,
 				/*jslint evil: true */
-				func: new Function ("obj", "with (obj) { return " + code + "; }"),
-				dependencies: Objs.keys(Objs.objectify(JavaScript.extractIdentifiers(code, true)))
+				func: new Function ("obj", "with (obj) { return " + c + "; }"),
+				dependencies: Object.keys(Objs.objectify(JavaScript.extractIdentifiers(c, true)))
 			};
+			this.__cache[code] = result;
+			return result;
 		}
 	
 	};
 });
+
 Scoped.define("module:Data.ScopeManager", [
 	    "base:Class",
 	    "base:Trees.TreeNavigator",
@@ -437,9 +442,10 @@ Scoped.define("module:Data.Scope", [
 	    "base:Ids",
 	    "base:Properties.Properties",
 	    "base:Collections.Collection",
+	    "base:Events.Events",
 	    "module:Data.ScopeManager",
 	    "module:Data.MultiScope"
-	], function (Class, EventsMixin, ListenMixin, ObjectIdMixin, Functions, Types, Strings, Objs, Ids, Properties, Collection, ScopeManager, MultiScope, scoped) {
+	], function (Class, EventsMixin, ListenMixin, ObjectIdMixin, Functions, Types, Strings, Objs, Ids, Properties, Collection, Events, ScopeManager, MultiScope, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, ListenMixin, ObjectIdMixin, function (inherited) {
 		return {
 				
@@ -454,10 +460,14 @@ Scoped.define("module:Data.Scope", [
 					extendables: [],
 					collections: {},
 					computed: {},
-					events: {}
+					events: {},
+					channels: {},
+					registerchannels: []
 				}, options);
 				if (options.bindings)
 					options.bind = Objs.extend(options.bind, options.bindings);
+				this._channels = {};
+				this.__channelCache = {};				
 				var parent = options.parent;
 				this.__manager = parent ? parent.__manager : this._auto_destroy(new ScopeManager(this));
 				inherited.constructor.call(this);
@@ -465,7 +475,8 @@ Scoped.define("module:Data.Scope", [
 				this.__root = parent ? parent.root() : this;
 				this.__children = {};
 				this.__extendables = Objs.objectify(options.extendables);
-				this.__properties = new Properties();
+				this.__properties = options.properties || new Properties();
+				this.__properties.increaseRef();
 				this.__properties.on("change", function (key, value, oldValue) {
 					this.trigger("change:" + key, value, oldValue);
 				}, this);
@@ -474,9 +485,18 @@ Scoped.define("module:Data.Scope", [
 				}, this);
 				this.__scopes = {};
 				this.__data = options.data;
-				this.setAll(Types.is_function(options.attrs) ? options.attrs() : options.attrs);
+				Objs.iter(Types.is_function(options.attrs) ? options.attrs() : options.attrs, function (value, key) {
+					if (!this.__properties.has(key))
+						this.set(key, value);
+				}, this);
+				this.setAll();
 				Objs.iter(options.collections, function (value, key) {
-					this.set(key, new Collection({objects: value}));
+					if (!this.__properties.has(key)) {
+						this.set(key, this.auto_destroy(new Collection({
+							objects: value,
+							release_references: true
+						})));
+					}
 				}, this);
 				if (parent)
 					parent.__add(this);
@@ -494,6 +514,13 @@ Scoped.define("module:Data.Scope", [
 				Objs.iter(options.events, function (value, key) {
 					this.on(key, value, this);
 				}, this);
+				Objs.iter(options.registerchannels, this.registerChannel, this);
+				Objs.iter(options.channels, function (value, key) {
+					var splt = Strings.splitFirst(key, ":");
+					var channel = this.channel(splt.head);
+					if (channel)
+						this.listenOn(this.channel(splt.head), splt.tail, value, this);
+				}, this);
 			},
 			
 			destroy: function () {
@@ -504,7 +531,7 @@ Scoped.define("module:Data.Scope", [
 				Objs.iter(this.__children, function (child) {
 					child.destroy();
 				});
-				this.__properties.destroy();
+				this.__properties.decreaseRef();
 				if (this.__parent)
 					this.__parent.__remove(this);
 				inherited.destroy.call(this);
@@ -591,6 +618,22 @@ Scoped.define("module:Data.Scope", [
 			
 			_eventChain: function () {
 				return this.parent();
+			},
+			
+			registerChannel: function (s) {
+				this._channels[s] = this.auto_destroy(new Events());
+			},
+			
+			channel: function (s) {
+				if (!(s in this.__channelCache)) {
+					var result = null;
+					if (this._channels[s])
+						result = this._channels[s];
+					else if (this.__parent)
+						result = this.__parent.channel(s);
+					this.__channelCache[s] = result;
+				}
+				return this.__channelCache[s];
 			},
 			
 			root: function () {
@@ -858,24 +901,42 @@ Scoped.define("module:DomObserver", [
 		
 	});
 });
+Scoped.define("module:Exceptions.DynamicsCallException", [
+    "base:Exceptions.Exception"
+], function (Exception, scoped) {
+	return Exception.extend({scoped: scoped}, function (inherited) {		
+		return {
+			
+			constructor: function (clsname, methodname, args, e) {
+				inherited.constructor.call(this, "Dynamics Exception in '" + clsname + "' calling method '" + methodname + "' : " + e);
+			}
+		
+		};
+	});
+});
+
 Scoped.define("module:Dynamic", [
    	    "module:Data.Scope",
    	    "module:Handlers.HandlerMixin",
+   	    "module:Exceptions.DynamicsCallException",
    	    "base:Objs",
    	    "base:Strings",
    	    "base:Types",
    	    "base:Functions",
+   	    "base:Events.Events",
    	    "module:Registries",
    	    "jquery:"
-   	], function (Scope, HandlerMixin, Objs, Strings, Types, Functions, Registries, $, scoped) {
+   	], function (Scope, HandlerMixin, DynamicsCallException, Objs, Strings, Types, Functions, Events, Registries, $, scoped) {
 	var Cls;
 	Cls = Scope.extend({scoped: scoped}, [HandlerMixin, function (inherited) {
    		return {
+   			
+   			supportsGc: true,
 
 		   	_notifications: {
 				_activate: "__createActivate"
 			},
-				
+			
 			constructor: function (options) {
 				this.initial = this.initial || {};
 				options = Objs.extend(Objs.clone(this.initial, 1), options);
@@ -890,6 +951,7 @@ Scoped.define("module:Dynamic", [
 					} else
 						options[key] = this[key];
 				}, this);
+				this.__dispose = options.dispose;
 				Objs.iter(this.object_functions, function (key) {
 					this[key] = function () {
 						var args = Functions.getArguments(arguments);
@@ -905,6 +967,7 @@ Scoped.define("module:Dynamic", [
 					}
 				}
 				inherited.constructor.call(this, options);
+				this._channels.global = this.cls.__globalEvents;
 				if (options.tagName) {
 					this._tagName = options.tagName;
 					this.data("tagname", this._tagName);
@@ -918,7 +981,7 @@ Scoped.define("module:Dynamic", [
 			},
 			
 			handle_call_exception: function (name, args, e) {
-				Registries.warning("Dynamics Exception in '" + this.cls.classname + "' calling method '" + name + "' : " + e);
+				Registries.throwException(new DynamicsCallException(this.cls.classname, name, args, e));
 				return null;
 			},
 			
@@ -931,17 +994,25 @@ Scoped.define("module:Dynamic", [
 					var source = ev.length === 1 ? this.activeElement() : this.activeElement().find(ev[1]);
 					this.__registered_dom_events.push(source);
 					source.on(ev[0] + "." + this.cid() + "-domevents", function (eventData) {
-						self.call(target, eventData);
+						self.execute(target, eventData, $(this));
 					});
 				}, this);
 				Objs.iter(this.windowevents, function (target, event) {
 					$(window).on(event + "." + this.cid() + "-windowevents", function (eventData) {
-						self.call(target, eventData);
+						self.execute(target, eventData, $(this));
 					});
 				}, this);
 			},
 			
 			destroy: function () {
+				if (this.free)
+					this.free();
+				Objs.iter(this.__dispose, function (attr) {
+					var obj = this.get(attr);
+					this.set(attr, null);
+					if (obj && obj.weakDestroy)
+						obj.weakDestroy();
+				}, this);
 				Objs.iter(this.__registered_dom_events, function (source) {
 					source.off("." + this.cid() + "-domevents");
 				}, this);
@@ -953,8 +1024,10 @@ Scoped.define("module:Dynamic", [
 	}], {
 		
 		__initialForward: [
-		    "functions", "attrs", "extendables", "collections", "template", "create", "scopes", "bindings", "computed", "types", "events"
+		    "functions", "attrs", "extendables", "collections", "template", "create", "scopes", "bindings", "computed", "types", "events", "dispose", "channels", "registerchannels"
         ],
+        
+        __globalEvents: new Events(),
 		
 		canonicName: function () {
 			return Strings.last_after(this.classname, ".").toLowerCase();
@@ -999,24 +1072,52 @@ Scoped.define("module:Dynamic", [
 		},
 		
 		_extender: {
+			types: function (base, overwrite) {
+				return Objs.extend(Objs.clone(base, 1), overwrite);
+			},
+			registerchannels: function (base, overwrite) {
+				return Objs.extend(Objs.clone(base, 1), overwrite);
+			},
+			channels: function (base, overwrite) {
+				return Objs.extend(Objs.clone(base, 1), overwrite);
+			},
 			attrs: function (base, overwrite) {
 				return Objs.extend(Objs.clone(base, 1), overwrite);
+			},
+			dispose: function (first, second) {
+				return (first || []).concat(second || []);
 			}
 		}
 	
 	});
 	return Cls;
 });
+Scoped.define("module:Exceptions.TagHandlerException", [
+	"base:Exceptions.Exception"
+], function (Exception, scoped) {
+	return Exception.extend({scoped: scoped}, function (inherited) {		
+		return {
+			
+			constructor: function (clsname, tag) {
+				inherited.constructor.call(this, clsname + " is expecting a tag handler, but no registered tag handler for " + tag + " has been found.");
+			}
+		
+		};
+	});
+});
+
 Scoped.define("module:Handlers.Attr", [
 	    "base:Class",
+	    "module:Exceptions.TagHandlerException",
 	    "module:Parser",
 	    "jquery:",
 	    "base:Types",
 	    "base:Objs",
 	    "base:Strings",
+	    "base:Async",
 	    "module:Registries",
 	    "browser:Dom"
-	], function (Class, Parser, $, Types, Objs, Strings, Registries, Dom, scoped) {
+	], function (Class, TagHandlerException, Parser, $, Types, Objs, Strings, Async, Registries, Dom, scoped) {
 	var Cls;
 	Cls = Class.extend({scoped: scoped}, function (inherited) {
 		return {
@@ -1049,13 +1150,17 @@ Scoped.define("module:Handlers.Attr", [
 			},
 			
 			__inputVal: function (el, value) {
-				if (arguments.length > 1) {
-					if (el.type == "checkbox")
-						el.checked = value;
-					else
-						el.value = value;
+				var valueKey = el.type === 'checkbox' || el.type === 'radio' ? 'checked' : 'value';
+				if (arguments.length > 1)  {
+					value = value === null || value === undefined ? "" : value;
+					if (el.type === "select-one") {
+						Async.eventually(function () {
+							el[valueKey] = value;
+						});
+					} else 
+						el[valueKey] = value;
 				}
-				return el.type == "checkbox" ? el.checked : el.value;
+				return el[valueKey];
 			},
 			
 			updateElement: function (element, attribute) {
@@ -1077,7 +1182,7 @@ Scoped.define("module:Handlers.Attr", [
 				if (this._dyn) {
 					var self = this;
 					if (this._dyn.bidirectional && this._attrName == "value") {
-						this._$element.on("change keyup keypress keydown blur focus update", function () {
+						this._$element.on("change keyup keypress keydown blur focus update input", function () {
 							self._node.mesh().write(self._dyn.variable, self.__inputVal(self._element));
 						});
 					}
@@ -1127,7 +1232,7 @@ Scoped.define("module:Handlers.Attr", [
 						this._partial.change(value, old);
 					if (this._attrName === "value" && this._element.value !== value)
 						this.__inputVal(this._element, value);
-					if (this._tagHandler && this._dyn)
+					if (this._tagHandler && this._dyn && !this._partial)
 						this._tagHandler.properties().set(Strings.first_after(this._attrName, "-"), value);
 				}
 			},
@@ -1157,6 +1262,11 @@ Scoped.define("module:Handlers.Attr", [
 				}
 			},
 			
+			prepareTagHandler: function (createArguments) {
+				if (this._partial)
+					this._partial.prepareTagHandler(createArguments);
+			},
+			
 			unbindTagHandler: function (handler) {
 				if (this._partial) {
 					this._partial.unbindTagHandler(handler);
@@ -1169,7 +1279,7 @@ Scoped.define("module:Handlers.Attr", [
 			activate: function () {
 				if (this._partial) {
 					if (this._partial.cls.meta.requires_tag_handler && !this._tagHandler) {
-						Registries.warning(this._partial.cls.classname + " is expecting a tag handler, but no registered tag handler for " + this._node.tag() + " has been found.");
+						Registries.throwException(new TagHandlerException(this._partial.cls.classname, this._node.tag()));
 						return;
 					}
 					this._partial.activate();
@@ -1206,6 +1316,7 @@ Scoped.define("module:Handlers.HandlerMixin", [
 		},
 		
 		__handlerConstruct: function () {
+			this.__activated = false;
 			this._mesh_extend = {
 				string: Functions.as_method(this.string, this)	
 			};
@@ -1213,8 +1324,11 @@ Scoped.define("module:Handlers.HandlerMixin", [
 	
 		__handlerDestruct: function () {
 			Objs.iter(this.__rootNodes, function (node) {
+				var $element = node.$element();
 				node.destroy();
-			});
+				if (this.remove_on_destroy)
+					$element.html("");
+			}, this);
 		},
 		
 		template: null,
@@ -1227,6 +1341,8 @@ Scoped.define("module:Handlers.HandlerMixin", [
 				return this.parent().string(key);
 			return key;
 		},
+		
+		remove_on_destroy: false,
 		
 		_handlerInitialize: function (options) {
 			options = options || {};
@@ -1332,7 +1448,21 @@ Scoped.define("module:Handlers.HandlerMixin", [
 			return this.__activeElement;
 		},
 		
+		_updateActiveElement: function (activeElement) {
+			this.__activeElement = activeElement;
+			if (this.__removeObserver) {
+				this.__removeObserver.weakDestroy();
+				this.__removeObserver = this.auto_destroy(NodeRemoveObserver.create(this.__activeElement.get(0)));
+				this.__removeObserver.on("node-removed", function () {
+					this.weakDestroy();
+				}, this);				
+			}
+		},
+		
 		activate: function () {
+			if (this.__activated)
+				return;
+			this.__activated = true;
 			/*
 			if (this.__deferActivate) {
 				this.__deferedActivate = true;
@@ -1343,6 +1473,7 @@ Scoped.define("module:Handlers.HandlerMixin", [
 				this._handlerInitializeTemplate(this.template, this._parentElement);
 			else {
 				if (this.templateUrl) {
+					this.__activated = false;
 					Loader.loadHtml(this.templateUrl, function (template) {
 						this.templateUrl = null;
 						this.template = template;
@@ -1402,9 +1533,11 @@ Scoped.define("module:Handlers.Handler", [
 
 Scoped.define("module:Handlers.Partial", [
  	    "base:Class",
+ 	    "base:JavaScript",
+ 	    "base:Functions",
  	    "module:Parser",
  	    "module:Registries"
- 	], function (Class, Parser, Registries, scoped) {
+ 	], function (Class, JavaScript, Functions, Parser, Registries, scoped) {
  	return Class.extend({scoped: scoped}, function (inherited) {
  		return {
 			
@@ -1442,6 +1575,8 @@ Scoped.define("module:Handlers.Partial", [
 			
 			unbindTagHandler: function (handler) {},
 			
+			prepareTagHandler: function (createArguments) {},
+			
 			_change: function (value, oldValue) {},
 			
 			_activate: function () {},
@@ -1453,6 +1588,16 @@ Scoped.define("module:Handlers.Partial", [
 			_execute: function (code) {
 				var dyn = Parser.parseCode(code || this._value);
 				this._node.__executeDyn(dyn);
+			},
+			
+			_valueExecute: function (args) {
+				var value = this._value.trim();
+				if (JavaScript.isProperIdentifier(value)) {
+					args = Functions.getArguments(args);
+					args.unshift(value);
+					this._node._handler.execute.apply(this._node._handler, args);
+				} else
+					this._execute(value);			
 			}
 			
 			
@@ -1586,8 +1731,12 @@ Scoped.define("module:Handlers.Node", [
 					attr.destroy();
 				});
 				this._removeChildren();
-				if (this._tagHandler && !this._tagHandler.destroyed())
-					this._tagHandler.destroy();
+				if (this._tagHandler && !this._tagHandler.destroyed()) {
+					if (this._tagHandler.cacheable && this._tagHandler.cls.cacheable)
+						Registries.handlerCache.suspend(this._tagHandler, this._$element);
+					else
+						this._tagHandler.weakDestroy();
+				}
 				if (this._dyn)
 					this.properties().off(null, null, this._dyn);
 				if (this._parent)
@@ -1646,7 +1795,10 @@ Scoped.define("module:Handlers.Node", [
 						attr.unbindTagHandler(this._tagHandler);
 					}, this);
 					this.off(null, null, this._tagHandler);
-					this._tagHandler.destroy();
+					if (this._tagHandler.cacheable && this._tagHandler.cls.cacheable)
+						Registries.handlerCache.suspend(this._tagHandler, this._$element);
+					else
+						this._tagHandler.weakDestroy();
 					this._tagHandler = null;
 				}
 			},
@@ -1666,18 +1818,31 @@ Scoped.define("module:Handlers.Node", [
 				if (!Registries.handler.get(tagv))
 					return false;
 				if (Info.isInternetExplorer() && Info.internetExplorerVersion() < 9) {
+					var isActiveElement = this._$element.get(0) === this._handler.activeElement().get(0);
 					this._$element = $(Dom.changeTag(this._$element.get(0), tagv));
 					this._element = this._$element.get(0);
 					Objs.iter(this._attrs, function (attr) {
 						attr.updateElement(this._element);
 					}, this);
+					if (isActiveElement)
+						this._handler._updateActiveElement(this._$element);
 				}
-				this._tagHandler = Registries.handler.create(tagv, {
+				var createArguments = {
 					parentElement: this._$element.get(0),
 					parentHandler: this._handler,
 					autobind: false,
+					cacheable: false,
 					tagName: tagv					
-				});
+				};
+				Objs.iter(this._attrs, function (attr) {
+					attr.prepareTagHandler(createArguments);
+				}, this);
+				if (createArguments.ignoreTagHandler)
+					return;
+				if (createArguments.cacheable)
+					this._tagHandler = Registries.handlerCache.resume(tagv, this._$element, this._handler);
+				if (!this._tagHandler)
+					this._tagHandler = Registries.handler.create(tagv, createArguments);
 				//this._$element.append(this._tagHandler.element());
 				Objs.iter(this._attrs, function (attr) {
 					attr.bindTagHandler(this._tagHandler);
@@ -1780,7 +1945,11 @@ Scoped.define("module:Handlers.Node", [
 	}]);
 	return Cls;
 });
-Scoped.define("module:Registries", ["base:Classes.ClassRegistry", "base:Strings", "jquery:"], function (ClassRegistry, Strings, $) {
+Scoped.define("module:Registries", [
+    "base:Classes.ClassRegistry",
+    "base:Exceptions.AsyncExceptionThrower",
+    "jquery:"
+], function (ClassRegistry, AsyncExceptionThrower, $) {
 	return {		
 		
 		handler: new ClassRegistry({}, true),
@@ -1792,7 +1961,7 @@ Scoped.define("module:Registries", ["base:Classes.ClassRegistry", "base:Strings"
 			cache: {},
 			
 			create: function (template) {
-				template = Strings.trim(template);
+				template = template.trim();
 				var cached = this.cache[template];
 				if (cached)
 					return cached.clone();
@@ -1808,10 +1977,46 @@ Scoped.define("module:Registries", ["base:Classes.ClassRegistry", "base:Strings"
 			
 		},
 		
-		warning: function (s) {
+		throwException: function (e) {
 			try {
-				console.log(s);
-			} catch (e) {}
+				if (!this.exceptionThrower)
+					this.exceptionThrower = new AsyncExceptionThrower();
+				this.exceptionThrower.throwException(e);
+			} catch (ex) {}
+		},
+		
+		handlerCache: {
+			
+			cache: {},
+			cacheDom: null,
+			
+			suspend: function (handler, element) {
+				if (!this.cacheDom)
+					this.cacheDom = $("<div ba-ignore style='display:none'></div>").appendTo(document.body);
+				var cacheDom = this.cacheDom;
+				var name = handler.data("tagname");
+				this.cache[name] = this.cache[name] || [];
+				this.cache[name].push({
+					handler: handler,
+					elements: element.children()
+				});
+				element.children().each(function () {
+					cacheDom.append(this);
+				});
+			},
+			
+			resume: function (name, element, parentHandler) {
+				if (!this.cache[name] || this.cache[name].length === 0)
+					return null;
+				var record = this.cache[name].shift();
+				element.html(record.elements);
+				record.handler._handlerInitialize({
+					parentHandler: parentHandler,
+					parentElement: element
+				});
+				return record.handler;
+			} 
+			
 		}
 	
 	};
@@ -1837,7 +2042,12 @@ Scoped.define("module:Partials.AssocPartial", ["module:Handlers.Partial"], funct
 	return Cls;
 });
 
-Scoped.define("module:Partials.AttrsPartial", ["module:Handlers.Partial"], function (Partial, scoped) {
+
+Scoped.define("module:Partials.AttrsPartial", [
+    "module:Handlers.Partial",
+    "base:Objs",
+    "base:Class"
+], function (Partial, Objs, Class, scoped) {
   /**
    * @name ba-attrs
    *
@@ -1862,11 +2072,35 @@ Scoped.define("module:Partials.AttrsPartial", ["module:Handlers.Partial"], funct
 		},
 		
 		bindTagHandler: function (handler) {
-			this._apply(this._value);
+			for (var key in this._value)
+				handler.setArgumentAttr(key, Class.is_pure_json(this._value[key]) ? Objs.clone(this._value[key], 1) : this._value[key]);
 		}
 
  	});
  	Cls.register("ba-attrs");
+	return Cls;
+});
+
+
+Scoped.define("module:Partials.CachePartial", ["module:Handlers.Partial"], function (Partial, scoped) {
+  	var Cls = Partial.extend({scoped: scoped},  {
+  		
+		bindTagHandler: function (handler) {
+			handler.cacheable = true;
+		},
+		
+		prepareTagHandler: function (createArguments) {
+			createArguments.cacheable = true;
+		}
+	
+ 	}, {
+ 		
+ 		meta: {
+ 			requires_tag_handler: true
+ 		}
+ 		
+ 	});
+ 	Cls.register("ba-cache");
 	return Cls;
 });
 
@@ -1965,12 +2199,14 @@ Scoped.define("module:Partials.DataPartial", ["module:Handlers.Partial"], functi
 	return Cls;
 });
 
-Scoped.define("module:Partials.EventPartial", ["module:Handlers.Partial"], function (Partial, scoped) {
+Scoped.define("module:Partials.EventPartial", [
+    "module:Handlers.Partial"
+], function (Partial, scoped) {
   	var Cls = Partial.extend({scoped: scoped}, {
 			
 		bindTagHandler: function (handler) {
-			handler.on(this._postfix, function (arg1, arg2, arg3, arg4) {
-				this._node._handler.call(this._value, arg1, arg2, arg3, arg4);
+			handler.on(this._postfix, function () {
+				this._valueExecute(arguments);
 			}, this);
 		}
  		
@@ -1991,6 +2227,21 @@ Scoped.define("module:Partials.FunctionsPartial", ["module:Handlers.Partial", "b
  		};
  	});
  	Cls.register("ba-functions");
+	return Cls;
+});
+
+Scoped.define("module:Partials.GcPartial", ["module:Handlers.Partial"], function (Partial, scoped) {
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
+ 		return {
+			
+ 			bindTagHandler: function (handler) {
+ 				if (this._value) 
+ 					handler.enableGc(this._value);
+ 			}
+ 		
+ 		};
+ 	});
+ 	Cls.register("ba-gc");
 	return Cls;
 });
 
@@ -2065,8 +2316,46 @@ Scoped.define("module:Partials.IgnorePartial", ["module:Handlers.Partial"], func
 	return Cls;
 });
 
+Scoped.define("module:Partials.InnerTemplatePartial",
+	["module:Handlers.Partial"], function (Partial, scoped) {
 
-Scoped.define("module:Partials.OnPartial", ["module:Handlers.Partial", "base:Strings"], function (Partial, Strings, scoped) {
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {		
+ 		return {
+
+			constructor: function (node, args, value) {
+				inherited.constructor.apply(this, arguments);
+				node._$element.html(value);
+			}
+
+ 		};
+ 	}, {
+ 		
+ 		meta: {
+ 			value_hidden: true
+ 		}
+ 		
+ 	});
+ 	Cls.register("ba-inner-template");
+	return Cls;
+
+});
+
+Scoped.define("module:Partials.NoScopePartial", ["module:Handlers.Partial"], function (Partial, scoped) {
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
+ 		return {
+			 			 			
+ 			prepareTagHandler: function (createArguments) {
+ 				createArguments.properties = this._node.properties();
+ 			}
+ 		
+ 		};
+ 	});
+ 	Cls.register("ba-noscope");
+	return Cls;
+});
+
+
+Scoped.define("module:Partials.OnPartial", ["module:Handlers.Partial"], function (Partial, Strings, scoped) {
   /**
    * @name ba-on
    *
@@ -2093,7 +2382,7 @@ Scoped.define("module:Partials.OnPartial", ["module:Handlers.Partial", "base:Str
  				inherited.constructor.apply(this, arguments);
  				var self = this;
  				this._node._$element.on(postfix + "." + this.cid(), function () {
- 					self._execute(Strings.trim(value));
+ 					self._execute(value.trim());
  				});
  			},
  			
@@ -2105,6 +2394,34 @@ Scoped.define("module:Partials.OnPartial", ["module:Handlers.Partial", "base:Str
  		};
  	});
  	Cls.register("ba-on");
+	return Cls;
+});
+
+Scoped.define("module:Partials.RadioGroupPartial", ["module:Handlers.Partial"], function (Partial, scoped) {
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
+ 		return {
+			
+ 			constructor: function (node, args, value) {
+ 				inherited.constructor.apply(this, arguments);
+ 				var self = this;
+ 				value = value.trim();
+ 				this._node._$element.prop("checked", self._node._$element.val() === this._node.properties().get(value));
+ 				this._node._$element.on("change." + this.cid(), function () {
+ 					self._node.properties().set(value, self._node._$element.val());
+ 				});
+ 				self._node.properties().on("change:" + value, function () {
+ 					this._node._$element.prop("checked", self._node._$element.val() === this._node.properties().get(value)); 					
+ 				}, this);
+ 			},
+ 			
+ 			destroy: function () {
+ 				this._node._$element.off("change." + this.cid());
+ 				inherited.destroy.call(this);
+ 			}
+ 		
+ 		};
+ 	});
+ 	Cls.register("ba-radio-group");
 	return Cls;
 });
 
@@ -2136,9 +2453,8 @@ Scoped.define("module:Partials.RepeatElementPartial", [
         "jquery:",
         "module:Parser",
         "base:Properties.Properties",
-        "base:Strings",
         "browser:Dom"
-	], function (Partial, Collection, FilteredCollection, Objs, $, Parser, Properties, Strings, Dom, scoped) {
+	], function (Partial, Collection, FilteredCollection, Objs, $, Parser, Properties, Dom, scoped) {
   /**
    * @name ba-repeat-element
    *
@@ -2172,12 +2488,22 @@ Scoped.define("module:Partials.RepeatElementPartial", [
  				inherited._activate.call(this);
  			},
  			
+ 			_iterateCollection: function (callback) {
+ 				var a = this._collection.iterator().asArray();
+ 				for (var i = a.length - 1; i >= 0; --i)
+ 					callback.call(this, a[i]);
+ 			},
+ 			
  			_newItemElements: function () {
- 				var template = Strings.trim(this.__filteredTemplate);
+ 				var template = this.__filteredTemplate.trim();
 				var element = $(template).get(0);
 				this._node._$element.after(element);
  				element["ba-handled"] = true;
  				return $(element);
+ 			},
+ 			
+ 			prepareTagHandler: function (createArguments) {
+ 				createArguments.ignoreTagHandler = true;
  			}
 
  		};
@@ -2194,9 +2520,8 @@ Scoped.define("module:Partials.RepeatPartial", [
         "base:Objs",
         "jquery:",
         "module:Parser",
-        "base:Strings",
         "module:Registries"
-	], function (Partial, Properties, Collection, FilteredCollection, Objs, $, Parser, Strings, Registries, scoped) {
+	], function (Partial, Properties, Collection, FilteredCollection, Objs, $, Parser, Registries, scoped) {
 	  /**
 	   * @name ba-repeat
 	   *
@@ -2221,11 +2546,11 @@ Scoped.define("module:Partials.RepeatPartial", [
  				inherited.constructor.apply(this, arguments);
  				this.__registered = false;
  				args = args.split("~");
- 				this.__repeatArg = Strings.trim(args[0]);
+ 				this.__repeatArg = args[0].trim();
  				this._destroyCollection = false;
  				this._destroyValueCollection = false;
  				if (args.length > 1) {
- 					this.__repeatFilter = Parser.parseCode(Strings.trim(args[1]));
+ 					this.__repeatFilter = Parser.parseCode(args[1].trim());
  					var self = this;
  					node.mesh().watch(this.__repeatFilter.dependencies, function () {
  						self.__filterChanged();
@@ -2271,6 +2596,10 @@ Scoped.define("module:Partials.RepeatPartial", [
 				}, true);
  			},
  			
+ 			_iterateCollection: function (callback) {
+ 				this._collection.iterate(callback, this);
+ 			},
+ 			
  			__register: function () {
  				this.__unregister();
  				this._isArray = !Collection.is_instance_of(this._value);
@@ -2278,14 +2607,16 @@ Scoped.define("module:Partials.RepeatPartial", [
  				this._valueCollection = this._destroyValueCollection ? new Collection({
  					objects: Objs.map(this._value, function (val) {
  						return new Properties({value: val});
- 					})}) : this._value;
+ 					}),
+ 					release_references: true
+ 				}) : this._value;
  				this._destroyCollection = !!this.__repeatFilter;
 				this._collection = this._destroyCollection ? new FilteredCollection(this._valueCollection, {
 					filter: this.__filterFunc,
 					context: this
 				}) : this._valueCollection;
 				this._collectionChildren = {};
-				this._collection.iterate(this.__addItem, this);
+				this._iterateCollection(this.__addItem);
 				this._collection.on("add", this.__addItem, this);
 				this._collection.on("remove", this.__removeItem, this);
 				this._collection.on("reindexed", function (item) {
@@ -2302,7 +2633,7 @@ Scoped.define("module:Partials.RepeatPartial", [
  			__unregister: function () {
  				if (!this._collection)
  					return;
- 				this._collection.iterate(this.__removeItem, this);
+ 				this._iterateCollection(this.__removeItem);
  				var $element = this._node._$element;
  				this._node._removeChildren();
  				$element.html("");
@@ -2428,7 +2759,7 @@ Scoped.define("module:Partials.ReturnPartial", ["module:Handlers.Partial"], func
 	return Cls;
 });
 
-Scoped.define("module:Partials.ShareScope", ["module:Handlers.Partial"], function (Partial, scoped) {
+Scoped.define("module:Partials.ShareScopePartial", ["module:Handlers.Partial"], function (Partial, scoped) {
  	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
  		return {
 			
@@ -2465,15 +2796,36 @@ Scoped.define("module:Partials.ShowPartial", ["module:Handlers.Partial"], functi
 			
  			constructor: function (node, args, value) {
  				inherited.constructor.apply(this, arguments);
+ 				this.__oldDisplay = undefined;
+ 				this.__readOldDisplay = false;
+ 				this.__hidden = false;
  				if (!value)
- 					node._$element.hide();
+ 					this.__hide();
+ 			},
+ 			
+ 			__hide: function () {
+ 				if (this.__hidden)
+ 					return;
+ 				this.__hidden = true;
+ 				if (!this.__readOldDisplay) {
+ 					this.__oldDisplay = this._node._$element.get(0).style.display;
+ 					this.__readOldDisplay = true;
+ 				}
+ 				this._node._$element.get(0).style.display = "none";
+ 			},
+ 			
+ 			__show: function () {
+ 				if (!this.__hidden)
+ 					return;
+ 				this.__hidden = false;
+ 				this._node._$element.get(0).style.display = this.__oldDisplay && this.__oldDisplay !== 'none' ? this.__oldDisplay : "";
  			},
  			
  			_apply: function (value) {
  				if (value)
- 					this._node._$element.show();
+ 					this.__show();
  				else
- 					this._node._$element.hide();
+ 					this.__hide();
  			}
  		
  		};
@@ -2586,6 +2938,47 @@ Scoped.define("module:Partials.TemplateUrlPartial",
  	Cls.register("ba-template-url");
 	return Cls;
 
+});
+
+Scoped.define("module:Partials.TogglePartial", ["module:Handlers.Partial"], function (Partial, scoped) {
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
+ 		return {
+			
+ 			constructor: function (node, args, value, postfix) {
+ 				inherited.constructor.apply(this, arguments);
+ 				node._$element.prop(postfix, value ? postfix : null);
+ 			},
+ 			
+ 			_apply: function (value) {
+ 				this._node._$element.prop(this._postfix, value ? this._postfix : null);
+ 			}
+ 		
+ 		};
+ 	});
+ 	Cls.register("ba-toggle");
+	return Cls;
+});
+
+Scoped.define("module:Partials.WeakIfPartial", ["module:Partials.ShowPartial"], function (Partial, scoped) {
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
+ 		return {
+			
+ 			constructor: function (node, args, value) {
+ 				inherited.constructor.apply(this, arguments);
+ 				if (!value)
+ 					node.deactivate();
+ 			},
+ 			
+ 			_apply: function (value) {
+ 				inherited._apply.call(this, value);
+ 				if (value)
+ 					this._node.activate();
+ 			}
+ 		
+ 		};
+ 	});
+ 	Cls.register("ba-weak-if");
+	return Cls;
 });
 
 }).call(Scoped);

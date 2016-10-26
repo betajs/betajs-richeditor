@@ -34,7 +34,8 @@ module.exports = function(grunt) {
         'betajs/betajs-scoped/dist/scoped.js',
         'betajs/betajs/dist/beta-noscoped.js',
         'betajs/betajs-browser/dist/betajs-browser-noscoped.js',
-        'betajs/betajs-dynamics/dist/betajs-dynamics-noscoped.js'
+        'betajs/betajs-dynamics/dist/betajs-dynamics-noscoped.js',
+        'betajs/betajs-shims/dist/betajs-shims.js'
      ] })
 
     /* Markdown Files */

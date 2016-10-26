@@ -1,6 +1,6 @@
 {
   "name": "betajs-richeditor",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "BetaJS-Richeditor is a rich editor plugin based on content editable using the BetaJS Framework.",
   "contributors": [
   	"Victor Lingenthal"
@@ -15,7 +15,6 @@
 		"grunt-preprocess": "",
 		"grunt-git-revision-count": "",
 		"grunt-closure-tools": "",
-		"grunt-contrib-jshint": "",
 		"grunt-wget": "",
 		"grunt-jsdoc": "",
 		"grunt-shell": "",
@@ -37,7 +36,8 @@
 			"npm": false
 		},
 		"weakDependencies": {
-			"betajs-scoped": "https://github.com/betajs/betajs-scoped"
+			"betajs-scoped": "https://github.com/betajs/betajs-scoped",
+			"betajs-shims": "https://github.com/betajs/betajs-shims"
 		},
 		"dependencies": {
 			"betajs": "https://github.com/betajs/betajs",
