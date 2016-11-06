@@ -1,4 +1,4 @@
-# betajs-richeditor 1.0.3
+# betajs-richeditor 1.0.5
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-richeditor/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-richeditor)
 
 
@@ -89,15 +89,20 @@ You can use the library in the browser and compile it as well.
 | Name | URL |
 | :----- | -------: |
 | betajs-scoped | [Open](https://github.com/betajs/betajs-scoped) |
+| betajs-shims | [Open](https://github.com/betajs/betajs-shims) |
 
 
-## Contributors
+## Main Contributors
 
 - Victor Lingenthal
-
 
 ## License
 
 Apache-2.0
+
+
+
+
+
 
 

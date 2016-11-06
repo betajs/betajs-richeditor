@@ -1,5 +1,5 @@
 /*!
-betajs-richeditor - v1.0.3 - 2016-10-22
+betajs-richeditor - v1.0.5 - 2016-11-06
 Copyright (c) Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -14,7 +14,7 @@ Scoped.binding('jquery', 'global:jQuery');
 Scoped.define("module:", function () {
 	return {
     "guid": "15a5c98c-e44a-cb29-7593-2577c3ce3753",
-    "version": "34.1477153864185"
+    "version": "35.1478470138131"
 };
 });
 Scoped.define("module:Richeditor", [
@@ -183,7 +183,7 @@ Scoped.define("module:Richeditor", [
 				Selection.selectionSplitOffsets();
 				var nodes = $(Selection.selectionNodes());
 				for (var i = 0; i < nodes.length; ++i)
-					Dom.remove_tag_from_parent_path(nodes[i], element, this.$editor());
+					this.remove_tag_from_parent_path(nodes[i], element, this.$editor());
 				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
 			},
 
@@ -223,7 +223,7 @@ Scoped.define("module:Richeditor", [
 				var node = $(Dom.splitNode(this.caretNode().get(0), this.caretNodeOffset() - 1, this.caretNodeOffset()));
 				var i = null;
 				for (i = 0; i < noTags.length; ++i)
-					Dom.remove_tag_from_parent_path(node, noTags[i], this.$editor());
+					this.remove_tag_from_parent_path(node, noTags[i], this.$editor());
 				for (i = 0; i < yesTags.length; ++i)
 					node = node.wrap("<" + yesTags[i] + "></" + yesTags[i] + ">");			
 				Selection.selectNode(node.get(0), 1);
@@ -238,6 +238,30 @@ Scoped.define("module:Richeditor", [
 					return;
 				this.__caretElementStack[element] = false;
 				this.trigger("element");
+			},
+			
+			contentSiblings: function (node) {
+				var result = [];
+				node.parentNode.childNodes.forEach(function (sibling) {
+					if (sibling != node)
+						result.push(sibling);
+				});
+				return result;
+			},
+
+			remove_tag_from_parent_path: function (node, tag, context) {	
+				tag = tag.toLowerCase();
+				node = $(node);
+				var parents = node.parents(context ? context + " " + tag : tag);
+				for (var i = 0; i < parents.length; ++i) {
+					var parent = parents.get(i);
+					parent = $(parent);
+					while (node.get(0) != parent.get(0)) {
+						this.contentSiblings(node.get(0)).wrap("<" + tag + "></" + tag + ">");
+						node = node.parent();
+					}
+					parent.contents().unwrap();
+				}
 			}			
 			
 		};
