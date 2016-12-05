@@ -1,5 +1,5 @@
 /*!
-betajs-richeditor - v1.0.5 - 2016-11-06
+betajs-richeditor - v1.0.6 - 2016-12-04
 Copyright (c) Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-richeditor - v1.0.5 - 2016-11-06
+betajs-richeditor - v1.0.6 - 2016-12-04
 Copyright (c) Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1019,7 +1019,7 @@ Scoped.binding('jquery', 'global:jQuery');
 Scoped.define("module:", function () {
 	return {
     "guid": "15a5c98c-e44a-cb29-7593-2577c3ce3753",
-    "version": "35.1478470138131"
+    "version": "36.1480901457138"
 };
 });
 Scoped.define("module:Richeditor", [
@@ -1079,7 +1079,7 @@ Scoped.define("module:Richeditor", [
 				return $(this.editor());
 			},
 			
-			_afterActivate: function ($element) {
+			_afterActivate: function () {
 				$e = this.$editor();
 				$e.attr("contenteditable", true);
 				$e.html(this.get("content"));

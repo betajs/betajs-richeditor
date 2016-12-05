@@ -55,7 +55,7 @@ Scoped.define("module:Richeditor", [
 				return $(this.editor());
 			},
 			
-			_afterActivate: function ($element) {
+			_afterActivate: function () {
 				$e = this.$editor();
 				$e.attr("contenteditable", true);
 				$e.html(this.get("content"));

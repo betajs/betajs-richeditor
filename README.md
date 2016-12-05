@@ -1,4 +1,4 @@
-# betajs-richeditor 1.0.5
+# betajs-richeditor 1.0.6
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-richeditor/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-richeditor)
 
 
@@ -60,9 +60,10 @@ You can use the library in the browser and compile it as well.
 | :--------- | --: |
 | Homepage   | [http://betajs.com](http://betajs.com) |
 | Git        | [git://github.com/betajs/betajs-richeditor.git](git://github.com/betajs/betajs-richeditor.git) |
-| Repository | [http://github.com/betajs/betajs-richeditor](http://github.com/betajs/betajs-richeditor) |
+| Repository | [https://github.com/betajs/betajs-richeditor](https://github.com/betajs/betajs-richeditor) |
 | Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
 | Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
+ 
 
 
 

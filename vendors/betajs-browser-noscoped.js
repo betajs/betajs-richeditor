@@ -1,5 +1,5 @@
 /*!
-betajs-browser - v1.0.47 - 2016-10-24
+betajs-browser - v1.0.53 - 2016-12-04
 Copyright (c) Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -8,12 +8,10 @@ Apache-2.0 Software License.
 var Scoped = this.subScope();
 Scoped.binding('module', 'global:BetaJS.Browser');
 Scoped.binding('base', 'global:BetaJS');
-Scoped.binding('jquery', 'global:jQuery');
-Scoped.binding('resumablejs', 'global:Resumable');
 Scoped.define("module:", function () {
 	return {
     "guid": "02450b15-9bbf-4be2-b8f6-b483bc015d06",
-    "version": "98.1477334995947"
+    "version": "108.1480901119997"
 };
 });
 Scoped.assumeVersion('base:version', 531);
@@ -155,7 +153,11 @@ Scoped.define("module:Ajax.JsonpScriptAjax", [
 			var head = document.getElementsByTagName("head")[0];
 			var script = document.createElement("script");
 			var executed = false; 
-			script.onerror = function () {
+			script.onerror = function (event) {
+				if (event.stopPropagation)
+					event.stopPropagation();
+				else
+					event.cancelBubble = true;
 				if (hasResult)
 					return;
 				hasResult = true;
@@ -337,6 +339,7 @@ Scoped.define("module:Ajax.XmlHttpRequestAjax", [
 					Objs.iter(options.data, function (value, key) {
 						formData.append(key, value);
 					}, this);
+					// xmlhttp.setRequestHeader("Content-Type", "multipart/form-data");
 					xmlhttp.send(formData);
 				} else if (options.contentType === "json") {
 					if (options.sendContentType)
@@ -486,6 +489,24 @@ function tryIframeApproach() {
 }
 
  */
+Scoped.define("module:Blobs", [], function() {
+	return {
+
+		createBlobByArrayBufferView : function(arrayBuffer, offset, size, type) {
+			try {
+				return new Blob([ new DataView(arrayBuffer, offset,size) ], {
+					type : type
+				});
+			} catch (e) {
+				return new Blob([ new Uint8Array(arrayBuffer, offset,size) ], {
+					type : type
+				});
+			}
+
+		}
+
+	};
+});
 Scoped.define("module:Cookies", ["base:Objs", "base:Types"], function (Objs, Types) {
 	return {
 		
@@ -569,44 +590,55 @@ Scoped.define("module:Events", [
 			},
 			
 			destroy: function () {
+				this.clear();
+				inherited.destroy.call(this);
+			},
+			
+			on: function (element, events, callback, context) {
+				events.split(" ").forEach(function (event) {
+					if (!event)
+						return;
+					var callback_function = Functions.as_method(callback, context || element);
+					element.addEventListener(event, callback_function, false);
+					this.__callbacks[event] = this.__callbacks[event] || [];
+					this.__callbacks[event].push({
+						element: element,
+						callback_function: callback_function,
+						callback: callback,
+						context: context
+					});
+				}, this);
+				return this;
+			},
+			
+			off: function (element, events, callback, context) {
+				events.split(" ").forEach(function (event) {
+					if (!event)
+						return;
+					var entries = this.__callbacks[event];
+					if (entries) {
+						var i = 0;
+						while (i < entries.length) {
+							var entry = entries[i];
+							if ((!element || element == entry.element) && (!callback || callback == entry.callback) && (!context || context == entry.context)) {
+								entry.element.removeEventListener(event, entry.callback_function, false);
+								entries[i] = entries[entries.length - 1];
+								entries.pop();
+							} else
+								++i;
+						}
+					}
+				}, this);
+				return this;
+			},
+			
+			clear: function () {
 				Objs.iter(this.__callbacks, function (entries, event) {
 					entries.forEach(function (entry) {
 						entry.element.removeEventListener(event, entry.callback_function, false);
 					});
 				});
-				inherited.destroy.call(this);
-			},
-			
-			on: function (element, event, callback, context) {
-				var callback_function = callback;
-				if (context)
-					callback_function = Functions.as_method(callback, context);
-				element.addEventListener(event, callback_function, false);
-				this.__callbacks[event] = this.__callbacks[event] || [];
-				this.__callbacks[event].push({
-					element: element,
-					callback_function: callback_function,
-					callback: callback,
-					context: context
-				});
-				return this;
-			},
-			
-			off: function (element, event, callback, context) {
-				var entries = this.__callbacks[event];
-				if (entries) {
-					var i = 0;
-					while (i < entries.length) {
-						var entry = entries[i];
-						if ((!element || element == entry.element) && (!callback || callback == entry.callback) && (!context || context == entry.context)) {
-							entry.element.removeEventListener(event, entry.callback_function, false);
-							entries[i] = entries[entries.length - 1];
-							entries.pop();
-						} else
-							++i;
-					}
-				}
-				return this;
+				this.__callbacks = {};
 			}
 			
 		};
@@ -1084,8 +1116,8 @@ Scoped.define("module:Info", [
 		
 		__cache: {},
 		
-		__cached: function (key, value_func) {
-			if (!(key in this.__cache)) {
+		__cached: function (key, value_func, force) {
+			if (!(key in this.__cache) || force) {
 				var n = this.getNavigator();
 				this.__cache[key] = value_func.call(this, n, n.userAgent, n.userAgent.toLowerCase());
 			}
@@ -1103,10 +1135,10 @@ Scoped.define("module:Info", [
 			});
 		},
 	
-		flash: function () {
+		flash: function (force) {
 			return this.__cached("flash", function () {
 				return new FlashDetect();
-			});
+			}, force);
 		},
 		
 		isiOS: function () {
@@ -1196,6 +1228,19 @@ Scoped.define("module:Info", [
 			});
 		},
 		
+		androidVersion: function () {
+			return this.__cached("androidVersion", function (nav) {
+				if (!this.isAndroid())
+					return false;
+			    var v = (nav.userAgent).match(/Android (\d+)\.(\d+)\.?(\d+)?/);
+			    return {
+			    	major: parseInt(v[1], 10),
+			    	minor: parseInt(v[2], 10),
+			    	revision: parseInt(v[3] || 0, 10)
+			    };
+			});
+		},
+
 		isMobile: function () {
 			return this.__cached("isMobile", function () {
 				return this.isiOS() || this.isAndroid() || this.isWebOS() || this.isWindowsPhone() || this.isBlackberry();
@@ -1670,10 +1715,9 @@ Scoped.define("module:LocationRouteBinder", [
 });
 
 Scoped.define("module:Dom", [
-    "jquery:",
     "base:Types",
     "module:Info"
-], function ($, Types, Info) {
+], function (Types, Info) {
 	return {
 		
 		changeTag: function (node, name) {
@@ -1684,7 +1728,8 @@ Scoped.define("module:Dom", [
 			}
 		    while (node.firstChild)
 		        replacement.appendChild(node.firstChild);
-		    node.parentNode.replaceChild(replacement, node);
+		    if (node.parentNode)
+		    	node.parentNode.replaceChild(replacement, node);
 			return replacement;
 		},		
 		
@@ -1752,67 +1797,118 @@ Scoped.define("module:Dom", [
 			});
 		},
 
-		
-		/* Rest depends on jQuery */
-		
-		outerHTML: function (element) {
-           if (!Info.isFirefox() || Info.firefoxVersion() >= 11)
-               return element.outerHTML;
-           return $('<div>').append($(element).clone()).html();
-        },
-			              
-		unbox: function (element) {
-			return $(element).get(0);
-		},
-		
-		elementOffset: function (element) {
-			return $(element).offset();
-		},
-		
-		elementDimensions: function (element) {
-			return {
-				width: $(element).width(),
-				height: $(element).height()
-			};
-		},
-		
-		triggerDomEvent: function (element, eventName) {
-			$(element).trigger(eventName);
-		},
-		
-		remove_tag_from_parent_path: function (node, tag, context) {	
-			tag = tag.toLowerCase();
-			node = $(node);
-			var parents = node.parents(context ? context + " " + tag : tag);
-			for (var i = 0; i < parents.length; ++i) {
-				var parent = parents.get(i);
-				parent = $(parent);
-				while (node.get(0) != parent.get(0)) {
-					this.contentSiblings(node.get(0)).wrap("<" + tag + "></" + tag + ">");
-					node = node.parent();
-				}
-				parent.contents().unwrap();
-			}
-		},
-		
 		entitiesToUnicode: function (s) {
 			if (!s || !Types.is_string(s) || s.indexOf("&") < 0)
 				return s;
 			var temp = document.createElement("span");
 			temp.innerHTML = s;
-			s = $(temp).text();
+			s = temp.textContent || temp.innerText;
 			if (temp.remove)
 				temp.remove();
 			return s;
 		},
 		
-		contentSiblings: function (node) {
-			return $(node.parentNode).contents().filter(function () {
-				return this != node.get(0);
-			});
+		unbox: function (element) {
+			return !element || element.nodeType ? element : element.get(0);
+		},
+		
+		triggerDomEvent: function (element, eventName) {
+			element = this.unbox(element);
+			eventName = eventName.toLowerCase();
+			var onEvent = "on" + eventName;
+			var onEventHandler = null;
+			var onEventCalled = false;
+			if (element[onEvent]) {
+				onEventHandler = element[onEvent];
+				element[onEvent] = function () {
+					if (onEventCalled)
+						return;
+					onEventCalled = true;
+					onEventHandler.apply(this, arguments);
+				};
+			}
+			try {
+				var event;
+				try {
+					event = new Event(eventName);
+				} catch (e) {
+					try {
+						event = document.createEvent('Event');
+						event.initEvent(eventName, false, false);
+					} catch (e) {
+						event = document.createEventObject();
+						event.type = eventName;
+					}
+				}
+				element.dispatchEvent(event);
+				if (onEventHandler) {
+					if (!onEventCalled)
+						onEventHandler.call(element, event);
+					element[onEvent] = onEventHandler;
+				}
+			} catch (e) {
+				if (onEventHandler)
+					element[onEvent] = onEventHandler;
+				throw e;
+			}
+		},
+		
+		elementOffset: function (element) {
+			element = this.unbox(element);
+			var top = 0;
+			var left = 0;
+			if (element.getBoundingClientRect) {
+				var box = element.getBoundingClientRect();
+				top = box.top;
+				left = box.left;
+			}
+			docElem = document.documentElement;
+			return {
+				top: top + (window.pageYOffset || docElem.scrollTop) - (docElem.clientTop || 0),
+				left: left + (window.pageXOffset || docElem.scrollLeft) - (docElem.clientLeft || 0)
+			};
+		},
+		
+		elementDimensions: function (element) {
+			element = this.unbox(element);
+			var cs, w, h;
+			if (window.getComputedStyle) {
+				cs = window.getComputedStyle(element);
+				w = parseInt(cs.width, 10);
+				h = parseInt(cs.height, 10);
+				if (w && h) {
+					return {
+						width: w,
+						height: h
+					};
+				}
+			}
+			if (element.currentStyle) {
+				cs = element.currentStyle;
+				w = element.clientWidth - parseInt(cs.paddingLeft || 0, 10) - parseInt(cs.paddingRight || 0, 10);
+				h = element.clientHeight - parseInt(cs.paddingTop || 0, 10) - parseInt(cs.paddingTop || 0, 10);
+				if (w && h) {
+					return {
+						width: w,
+						height: h
+					};
+				}
+			}
+			if (element.getBoundingClientRect) {
+				var box = element.getBoundingClientRect();
+				h = box.bottom - box.top;
+				w = box.right - box.left;
+				return {
+					width: w,
+					height: h
+				};
+			}
+			return {
+				width: 0,
+				height: 0
+			};
 		}
 		
-				
 	};
 });
 Scoped.define("module:DomExtend.DomExtension", [
@@ -1906,7 +2002,7 @@ Scoped.define("module:DomExtend.DomExtension", [
 					this._element.style.width = idealBB.width + "px";
 					width = Dom.elementDimensions(this._element).width;
 					var current = this._element;
-					while (current != document) {
+					while (current != document.body) {
 						current = current.parentNode;
 						width = Math.min(width, Dom.elementDimensions(current).width);
 					}
@@ -2397,6 +2493,117 @@ Scoped.define("module:Selection", [
 });
 
 
+Scoped.define("module:Upload.ChunkedFileUploader", [
+     "module:Upload.FileUploader",
+     "module:Upload.MultiUploader",
+     "module:Blobs",
+     "base:Promise",
+     "base:Objs",
+     "base:Tokens",
+     "base:Ajax.Support"
+], function (FileUploader, MultiUploader, Blobs, Promise, Objs, Tokens, AjaxSupport, scoped) {
+	
+	return FileUploader.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options) {
+				inherited.constructor.call(this, options);
+				this._multiUploader = new MultiUploader({
+					uploadLimit: this._options.uploadLimit
+				});
+				this._options.identifierParameter = this._options.identifierParameter || "identifier";
+				this._options.chunks = Objs.extend({
+					size: 1000000,
+					chunkNumberParameter: "chunknumber"
+				}, this._options.chunks);
+				this._options.assembly = Objs.extend({
+					fileNameParameter: "filename",
+					totalSizeParameter: "totalsize",
+					chunkNumberParameter: "chunknumber",
+					fileTypeParameter: "filetype",
+					ajaxOptions: null
+				}, this._options.assembly);
+			},
+
+			destroy: function () {
+				this._multiUploader.destroy();
+				inherited.destroy.call(this);
+			},
+			
+			reset: function () {
+				inherited.reset.call(this);
+				this._multiUploader.destroy();
+				this._multiUploader = new MultiUploader({
+					uploadLimit: this._options.uploadLimit
+				});
+			},
+			
+			__generateIdentifier: function () {
+				return Tokens.generate_token();
+			},
+		
+			_upload: function () {
+				var identifier = this.__generateIdentifier();
+				var file = this._options.isBlob ? this._options.source : this._options.source.files[0];
+				var fileReader = new FileReader();
+				var arrayBufferPromise = Promise.create();
+				fileReader.onloadend = function (e) {
+					arrayBufferPromise.asyncSuccess(e.target.result);
+				};
+				fileReader.readAsArrayBuffer(file);
+				arrayBufferPromise.success(function (arrayBuffer) {
+					var chunkNumber = 0;
+					while (chunkNumber * this._options.chunks.size < file.size) {
+						var data = {};
+						data[this._options.chunks.chunkNumberParameter] = chunkNumber+1;
+						data[this._options.identifierParameter] = identifier;
+						var offset = chunkNumber * this._options.chunks.size;
+						var size = Math.min(this._options.chunks.size, file.size - offset);
+						this._multiUploader.addUploader(this._multiUploader.auto_destroy(FileUploader.create({
+							url: this._options.chunks.url || this._options.url,
+							source: Blobs.createBlobByArrayBufferView(arrayBuffer, offset, size, file.type),
+							data: Objs.extend(data, this._options.data)
+						})));
+						chunkNumber++;
+					}
+					this._multiUploader.on("error", function (error) {
+						this._errorCallback(error);
+					}, this).on("progress", function (uploaded, total) {
+						this._progressCallback(uploaded, total);
+					}, this).on("success", function () {
+						var data = {};
+						data[this._options.identifierParameter] = identifier;
+						data[this._options.assembly.fileNameParameter] = file.name || "blob";
+						data[this._options.assembly.totalSizeParameter] = file.size;
+						data[this._options.assembly.chunkNumberParameter] = chunkNumber;
+						data[this._options.assembly.fileTypeParameter] = file.type;
+						AjaxSupport.execute(Objs.extend({
+							method: "POST",
+							uri: this._options.assembly.url || this._options.url,
+							data: Objs.extend(data, this._options.data)
+						}, this._options.assembly.ajaxOptions)).success(function () {
+							this._successCallback();
+						}, this).error(function (error) {
+							this._errorCallback(error);
+						}, this);
+					}, this);
+					this._multiUploader.upload();
+				}, this);
+			}
+			
+		};
+	}, {
+		
+		supported: function (options) {
+			return typeof Blob !== "undefined" && typeof FileReader !== "undefined" && typeof DataView !== "undefined" && options.serverSupportsChunked;
+		}
+		
+	});	
+
+});
+
+
+
 Scoped.define("module:Upload.CordovaFileUploader", [
      "module:Upload.FileUploader"
 ], function (FileUploader, scoped) {
@@ -2442,8 +2649,10 @@ Scoped.define("module:Upload.FileUploader", [
     "base:Classes.ConditionalInstance",
     "base:Events.EventsMixin",
     "base:Objs",
-    "base:Types"
-], function (ConditionalInstance, EventsMixin, Objs, Types, scoped) {
+    "base:Types",
+    "base:Async",
+    "base:Promise"
+], function (ConditionalInstance, EventsMixin, Objs, Types, Async, Promise, scoped) {
 	return ConditionalInstance.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 			
@@ -2517,7 +2726,9 @@ Scoped.define("module:Upload.FileUploader", [
 				if (this.state() !== "uploading")
 					return;
 				if (this._options.resilience > 0) {
-					this.__upload();
+					Async.eventually(function () {
+						this.__upload();
+					}, this, this._options.resilience_delay);					
 					return;
 				}
 				if (!this._options.essential) {
@@ -2526,7 +2737,15 @@ Scoped.define("module:Upload.FileUploader", [
 				}
 				this._data = data;
 				this._setState("error", data);
-			}
+			},
+			
+			uploadedBytes: function () {
+				return this._uploaded;
+			},
+			
+			totalBytes: function () {
+				return this._total || (this._options.isBlob ? this._options.source : this._options.source.files[0]).size;
+			}			
 			
 		};
 	}], {
@@ -2540,6 +2759,7 @@ Scoped.define("module:Upload.FileUploader", [
 				serverSupportPostMessage: false,
 				isBlob: typeof Blob !== "undefined" && options.source instanceof Blob,
 				resilience: 1,
+				resilience_delay: 1000,
 				essential: true,
 				data: {}
 			}, options);
@@ -2573,10 +2793,29 @@ Scoped.define("module:Upload.CustomUploader", [
 	});	
 });
 
+
+
+Scoped.extend("module:Upload.FileUploader", [
+	"module:Upload.FileUploader",
+	"module:Upload.FormDataFileUploader",
+	"module:Upload.FormIframeFileUploader",
+	"module:Upload.CordovaFileUploader",
+	"module:Upload.ChunkedFileUploader"
+], function (FileUploader, FormDataFileUploader, FormIframeFileUploader, CordovaFileUploader, ChunkedFileUploader) {
+	FileUploader.register(FormDataFileUploader, 2);
+	FileUploader.register(FormIframeFileUploader, 1);
+	FileUploader.register(CordovaFileUploader, 4);
+	FileUploader.register(ChunkedFileUploader, 5);
+	return {};
+});
+
+
+
+
 Scoped.define("module:Upload.FormDataFileUploader", [
     "module:Upload.FileUploader",
     "module:Info",
-    "base:Ajax.Support:",
+    "base:Ajax.Support",
     "base:Objs"
 ], function (FileUploader, Info, AjaxSupport, Objs, scoped) {
 	return FileUploader.extend({scoped: scoped}, {
@@ -2691,23 +2930,6 @@ Scoped.define("module:Upload.FormIframeFileUploader", [
 
 
 
-
-
-Scoped.extend("module:Upload.FileUploader", [
-	"module:Upload.FileUploader",
-	"module:Upload.FormDataFileUploader",
-	"module:Upload.FormIframeFileUploader",
-	"module:Upload.CordovaFileUploader"
-], function (FileUploader, FormDataFileUploader, FormIframeFileUploader, CordovaFileUploader) {
-	FileUploader.register(FormDataFileUploader, 2);
-	FileUploader.register(FormIframeFileUploader, 1);
-	FileUploader.register(CordovaFileUploader, 4);
-	return {};
-});
-
-
-
-
 Scoped.define("module:Upload.MultiUploader", [
     "module:Upload.FileUploader",
     "base:Objs"
@@ -2718,6 +2940,14 @@ Scoped.define("module:Upload.MultiUploader", [
 			constructor: function (options) {
 				inherited.constructor.call(this, options);
 				this._uploaders = {};
+				this._uploadLimit = this._options.uploadLimit || 5;
+				this._uploadingCount = 0;
+				this._end = !this._options.manualEnd;
+			},
+			
+			end: function () {
+				this._end = true;
+				this._updateState();
 			},
 			
 			addUploader: function (uploader) {
@@ -2727,8 +2957,10 @@ Scoped.define("module:Upload.MultiUploader", [
 				if (this.state() === "uploading") {
 					if (uploader.state() === "error")
 						uploader.reset();
-					if (uploader.state() === "idle")
+					if (uploader.state() === "idle" && this._uploadingCount < this._uploadLimit) {
+						this._uploadingCount++;
 						uploader.upload();
+					}
 				}
 				return this;
 			},
@@ -2737,8 +2969,10 @@ Scoped.define("module:Upload.MultiUploader", [
 				Objs.iter(this._uploaders, function (uploader) {
 					if (uploader.state() === "error")
 						uploader.reset();
-					if (uploader.state() === "idle")
+					if (uploader.state() === "idle" && this._uploadingCount < this._uploadLimit) {
+						this._uploadingCount++;
 						uploader.upload();
+					}
 				}, this);
 				this._updateState();
 			},
@@ -2746,21 +2980,41 @@ Scoped.define("module:Upload.MultiUploader", [
 			_updateState: function () {
 				if (this.state() !== "uploading")
 					return;
-				var success = 0;
+				this._uploadingCount = 0;
 				var error = false;
-				var uploading = false;
+				var idleCount = 0;
 				Objs.iter(this._uploaders, function (uploader) {
-					uploading = uploading || uploader.state() === "uploading";
-					error = error || uploader.state() === "error";
+					switch (uploader.state()) {
+						case "uploading":
+							this._uploadingCount++;
+							break;
+						case "error":
+							error = true;
+							break;
+						case "idle":
+							idleCount++;
+							break;
+					}
 				}, this);
-				if (uploading)
+				if (idleCount > 0 && this._uploadingCount < this._uploadLimit) {
+					Objs.iter(this._uploaders, function (uploader) {
+						if (this._uploadingCount < this._uploadLimit && uploader.state() === "idle") {
+							uploader.upload();
+							idleCount--;
+							this._uploadingCount++;
+						}
+					}, this);
+				}
+				if (this._uploadingCount > 0)
+					return;
+				if (!this._end)
 					return;
 				var datas = [];
 				Objs.iter(this._uploaders, function (uploader) {
 					var result = (error && uploader.state() === "error") || (!error && uploader.state() === "success") ? uploader.data() : undefined;
 					datas.push(result);
 				}, this);
-				if (error)
+				if (error > 0)
 					this._errorCallback(datas);
 				else
 					this._successCallback(datas);
@@ -2769,23 +3023,23 @@ Scoped.define("module:Upload.MultiUploader", [
 			_updateProgress: function () {
 				if (this.state() !== "uploading")
 					return;
-				var total = 0;
+				this._progressCallback(this.uploadedBytes(), this.totalBytes());
+			},
+			
+			uploadedBytes: function () {
 				var uploaded = 0;
 				Objs.iter(this._uploaders, function (uploader) {
-					var state = uploader.state();
-					var progress = uploader.progress();
-					if (progress && progress.total) {
-						if (uploader.state() === "success") {
-							total += progress.total;
-							uploaded += progress.total;
-						}
-						if (uploader.state() === "uploading") {
-							total += progress.total;
-							uploaded += progress.uploaded;
-						}
-					}
+					uploaded += uploader.uploadedBytes();
 				}, this);
-				this._progressCallback(uploaded, total);
+				return uploaded;
+			},
+			
+			totalBytes: function () {
+				var total = 0;
+				Objs.iter(this._uploaders, function (uploader) {
+					total += uploader.totalBytes();
+				}, this);
+				return total;
 			}
 
 		};
@@ -2794,85 +3048,108 @@ Scoped.define("module:Upload.MultiUploader", [
 
 
 
-Scoped.define("module:Upload.ResumableFileUploader", [
-    "module:Upload.FileUploader",
-    "resumablejs:",
-    "base:Async",
-    "base:Objs",
-    "jquery:"
-], function (FileUploader, ResumableJS, Async, Objs, $, scoped) {
-	return FileUploader.extend({scoped: scoped}, {
+
+Scoped.define("module:Upload.StreamingFileUploader", [
+     "module:Upload.FileUploader",
+     "module:Upload.MultiUploader",
+     "base:Promise",
+     "base:Objs",
+     "base:Tokens",
+     "base:Ajax.Support"
+], function (FileUploader, MultiUploader, Promise, Objs, Tokens, AjaxSupport, scoped) {
+	
+	return FileUploader.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options) {
+				inherited.constructor.call(this, options);
+				this._multiUploader = new MultiUploader({
+					uploadLimit: this._options.uploadLimit,
+					manualEnd: true
+				});
+				this._options.identifierParameter = this._options.identifierParameter || "identifier";
+				this._options.chunks = Objs.extend({
+					chunkNumberParameter: "chunknumber"
+				}, this._options.chunks);
+				this._options.assembly = Objs.extend({
+					totalSizeParameter: "totalsize",
+					chunkNumberParameter: "chunknumber",
+					ajaxOptions: null
+				}, this._options.assembly);
+				this._identifier = this.__generateIdentifier();
+				this._chunkNumber = 0;
+				this._totalSize = 0;
+			},
+
+			destroy: function () {
+				this._multiUploader.destroy();
+				inherited.destroy.call(this);
+			},
+			
+			reset: function () {
+				inherited.reset.call(this);
+				this._multiUploader.destroy();
+				this._multiUploader = new MultiUploader({
+					uploadLimit: this._options.uploadLimit
+				});
+				this._identifier = this.__generateIdentifier();
+				this._chunkNumber = 0;
+				this._totalSize = 0;
+			},
+			
+			__generateIdentifier: function () {
+				return Tokens.generate_token();
+			},
+			
+			addChunk: function (blob) {
+				var data = {};
+				data[this._options.chunks.chunkNumberParameter] = this._chunkNumber+1;
+				data[this._options.identifierParameter] = this._identifier;
+				this._multiUploader.addUploader(this._multiUploader.auto_destroy(FileUploader.create({
+					url: this._options.chunks.url || this._options.url,
+					source: blob,
+					data: Objs.extend(data, this._options.data)
+				})));
+				this._chunkNumber++;
+				this._totalSize += blob.size;
+			},
+			
+			end: function () {
+				this._multiUploader.end();
+			},
 		
-		_upload: function () {
-			this._resumable = new ResumableJS(Objs.extend({
-				target: this._options.url,
-				headers: this._options.data
-			}, this._options.resumable));
-			if (this._options.isBlob)
-				this._options.source.fileName = "blob";
-			this._resumable.addFile(this._options.isBlob ? this._options.source : this._options.source.files[0]);
-			var self = this;
-			this._resumable.on("fileProgress", function (file) {
-				var size = self._resumable.getSize();
-				self._progressCallback(Math.floor(self._resumable.progress() * size), size);
-			});
-			this._resumable.on("fileSuccess", function (file, message) {
-				if (self._options.resumable.assembleUrl)
-					self._resumableSuccessCallback(file, message, self._options.resumable.assembleResilience || 1);
-				else
-					self._successCallback(message);
-			});
-			this._resumable.on("fileError", function (file, message) {
-				self._errorCallback(message);
-			});
-			Async.eventually(this._resumable.upload, this._resumable);
-		},
-		
-		_resumableSuccessCallback: function (file, message, resilience) {
-			if (resilience <= 0)
-				this._errorCallback(message);
-			var self = this;
-			$.ajax({
-				type: "POST",
-				async: true,
-				url: this._options.resumable.assembleUrl,
-				dataType: null, 
-				data: Objs.extend({
-					resumableIdentifier: file.file.uniqueIdentifier,
-					resumableFilename: file.file.fileName || file.file.name,
-					resumableTotalSize: file.file.size,
-					resumableType: file.file.type
-				}, this._options.data),
-				success: function (response) {
-					self._successCallback(message);
-				},
-				error: function (jqXHR, textStatus, errorThrown) {
-					if (self._options.resumable.acceptedAssembleError && self._options.resumable.acceptedAssembleError == jqXHR.status) {
-						self._successCallback(message);
-						return;
-					}
-					Async.eventually(function () {
-						self._resumableSuccessCallback(file, message, resilience - 1);
-					}, self._options.resumable.assembleResilienceTimeout || 0);
-				}
-			});
-		}
-		
+			_upload: function () {
+				this._multiUploader.on("error", function (error) {
+					this._errorCallback(error);
+				}, this).on("progress", function (uploaded, total) {
+					this._progressCallback(uploaded, total);
+				}, this).on("success", function () {
+					var data = {};
+					data[this._options.identifierParameter] = this._identifier;
+					data[this._options.assembly.totalSizeParameter] = this._totalSize;
+					data[this._options.assembly.chunkNumberParameter] = this._chunkNumber;
+					AjaxSupport.execute(Objs.extend({
+						method: "POST",
+						uri: this._options.assembly.url || this._options.url,
+						data: Objs.extend(data, this._options.data)
+					}, this._options.assembly.ajaxOptions)).success(function () {
+						this._successCallback();
+					}, this).error(function (error) {
+						this._errorCallback(error);
+					}, this);
+				}, this);
+				this._multiUploader.upload();
+			}
+			
+		};
 	}, {
 		
 		supported: function (options) {
-			return options.serverSupportChunked && (new ResumableJS()).support;
+			return typeof Blob !== "undefined" && options.serverSupportsChunked;
 		}
-		
-	});	
-});
 
-Scoped.extend("module:Upload.FileUploader", [
-	"module:Upload.FileUploader",
-	"module:Upload.ResumableFileUploader"
-], function (FileUploader, ResumableFileUploader) {
- 	FileUploader.register(ResumableFileUploader, 3);
- 	return {};
+	});	
+
 });
 
 }).call(Scoped);
