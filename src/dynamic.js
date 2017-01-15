@@ -48,7 +48,7 @@ Scoped.define("module:Richeditor", [
 			},
 			
 			editor: function () {
-				return this.element().get(0);
+				return Dom.unbox(this.activeElement());
 			},
 			
 			$editor: function () {

@@ -1,5 +1,5 @@
 /*!
-betajs-richeditor - v1.0.6 - 2016-12-04
+betajs-richeditor - v1.0.7 - 2017-01-15
 Copyright (c) Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -14,9 +14,12 @@ Scoped.binding('jquery', 'global:jQuery');
 Scoped.define("module:", function () {
 	return {
     "guid": "15a5c98c-e44a-cb29-7593-2577c3ce3753",
-    "version": "36.1480901457138"
+    "version": "1.0.7"
 };
 });
+Scoped.assumeVersion('base:version', '~1.0.96');
+Scoped.assumeVersion('browser:version', '~1.0.61');
+Scoped.assumeVersion('dynamics:version', '~0.0.83');
 Scoped.define("module:Richeditor", [
     "dynamics:Dynamic",
     "jquery:",
@@ -67,7 +70,7 @@ Scoped.define("module:Richeditor", [
 			},
 			
 			editor: function () {
-				return this.element().get(0);
+				return Dom.unbox(this.activeElement());
 			},
 			
 			$editor: function () {
