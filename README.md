@@ -1,7 +1,7 @@
-# betajs-richeditor 1.0.7
+# betajs-richeditor 1.0.8
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-richeditor/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-richeditor)
 [![NPM](https://img.shields.io/npm/v/betajs-richeditor.svg?style=flat)](https://www.npmjs.com/package/betajs-richeditor)
-
+[![Gitter Chat](https://badges.gitter.im/betajs/betajs-richeditor.svg)](https://gitter.im/betajs/betajs-richeditor)
 
 BetaJS-Richeditor is a rich editor plugin based on content editable using the BetaJS Framework.
 
@@ -64,7 +64,7 @@ You can use the library in the browser and compile it as well.
 | Repository | [https://github.com/betajs/betajs-richeditor](https://github.com/betajs/betajs-richeditor) |
 | Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
 | Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
- 
+| Gitter     | [https://gitter.im/betajs/betajs-richeditor](https://gitter.im/betajs/betajs-richeditor) | 
 
 
 

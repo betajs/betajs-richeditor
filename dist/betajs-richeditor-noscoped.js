@@ -1,5 +1,5 @@
 /*!
-betajs-richeditor - v1.0.7 - 2017-01-15
+betajs-richeditor - v1.0.8 - 2017-02-14
 Copyright (c) Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -14,7 +14,7 @@ Scoped.binding('jquery', 'global:jQuery');
 Scoped.define("module:", function () {
 	return {
     "guid": "15a5c98c-e44a-cb29-7593-2577c3ce3753",
-    "version": "1.0.7"
+    "version": "1.0.8"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -25,10 +25,11 @@ Scoped.define("module:Richeditor", [
     "jquery:",
     "base:Strings",
     "browser:Dom",
+    "browser:Events",
     "browser:Selection",
     "base:Objs",
     "base:Types"
-], function (Dynamic, $, Strings, Dom, Selection, Objs, Types, scoped) {
+], function (Dynamic, $, Strings, Dom, DomEvents, Selection, Objs, Types, scoped) {
 	
 	var Cls = Dynamic.extend({scoped: scoped}, function (inherited) {
 		return {
@@ -37,6 +38,7 @@ Scoped.define("module:Richeditor", [
 			
 			constructor: function (options) {
 				inherited.constructor.call(this, options);
+				this._domEvents = this.auto_destroy(new DomEvents());
 				this.set("content", this.initialContent || "");
 				this.__wasKeyInput = false;
 				this.__enableContentChange = false;
@@ -45,16 +47,15 @@ Scoped.define("module:Richeditor", [
 				});
 				this.on("change:content", function (value) {
 					if (this.editor() && this.__enableContentChange)
-						this.$editor().html(value);
+						this.editor().innerHTML = value;
 				}, this);
 				this.properties().computed("text", function () {
 					return Strings.strip_html(this.get("content") || "");
 				}, ["content"]);
-				var self = this;
-				$(window).on("selectionchange." + this.cid(), function () {
-					if (self.hasFocus())
-						self.trigger("select");
-				});
+				this._domEvents.on(window, "selectionchange", function () {
+					if (this.hasFocus())
+						this.trigger("select");
+				}, this);
 				this.__caretElementStack = {};
 				this.on("select", function () {
 					this.__caretClearElementStack();
@@ -64,53 +65,38 @@ Scoped.define("module:Richeditor", [
 				}, this);
 			},
 			
-			destroy: function () {
-				$(window).off("selectionchange." + this.cid());
-				inherited.destroy.call(this);
-			},
-			
 			editor: function () {
 				return Dom.unbox(this.activeElement());
 			},
 			
-			$editor: function () {
-				return $(this.editor());
-			},
-			
 			_afterActivate: function () {
-				$e = this.$editor();
-				$e.attr("contenteditable", true);
-				$e.html(this.get("content"));
-				var self = this;
-				$e.on("blur", function () {
-					self.trigger("leave");
-				});
-				$e.on("focus", function () {
-					self.trigger("enter");
-				});
-				$e.on("keypress", function (e) {
-					self.__wasKeyInput = false;
+				var e = this.editor();
+				e.contentEditable = true;
+				e.innerHTML = this.get("content");
+				this._domEvents.on(e, "blur", function () {
+					this.trigger("leave");
+				}, this);
+				this._domEvents.on(e, "focus", function () {
+					this.trigger("enter");
+				}, this);
+				this._domEvents.on(e, "keypress", function (e) {
+					this.__wasKeyInput = false;
 					if (e.which !== 0)
-						self.__wasKeyInput = true;			
-				});
-				$e.on("input", function (e) {
-					self.__enableContentChange = false;
-					self.set("content", $e.html());
-					self.__enableContentChange = true;
-					if (self.__wasKeyInput) {
-						self.__wasKeyInput = false;
-						self.trigger("keyinput");
+						this.__wasKeyInput = true;			
+				}, this);
+				this._domEvents.on(e, "input", function (e) {
+					this.__enableContentChange = false;
+					this.set("content", e.innerHTML);
+					this.__enableContentChange = true;
+					if (this.__wasKeyInput) {
+						this.__wasKeyInput = false;
+						this.trigger("keyinput");
 					}
-				});
+				}, this);
 			},
 
-			hasFocus: function () {
-				return (document.activeElement == this.editor()) ||
-				       ($(document.activeElement).parents(this.editor()).length > 0);
-			},
-			
 			focus: function () {
-				this.$editor().focus();
+				this.editor().focus();
 			},
 			
 			caretNodeOffset: function () {
@@ -129,29 +115,7 @@ Scoped.define("module:Richeditor", [
 			},
 
 			isSelected : function() {
-				return Selection.selectionContained(this.$editor().get(0)) && Selection.selectionNonEmpty();
-			},
-			
-			selectionAncestor: function () {
-				return $(Selection.selectionAncestor());
-			},
-			
-			selection: function () {
-				return $(Selection.selectionNodes());
-			},
-				
-			selectionLeaves: function () {
-				return $(Selection.selectionLeaves());
-			},
-
-			selectionHasParentElement : function(element) {
-				if (!this.isSelected())
-					return false;
-				if (this.selectionAncestor().parents(this.$editor().find(element)).length > 0)
-					return true;
-				return Objs.all(this.selectionLeaves(), function (node) {
-					return node.closest(this.$editor().find(element)).length > 0;
-				}, this);
+				return Selection.selectionContained(this.editor()) && Selection.selectionNonEmpty();
 			},
 			
 			selectionSetParentElement: function (element, value) {
@@ -166,38 +130,6 @@ Scoped.define("module:Richeditor", [
 					this.selectionAddParentElement(element);
 				else
 					this.selectionRemoveParentElement(element);
-			},
-
-			selectionAddParentElement : function (element) {
-				if (!this.isSelected())
-					return;
-				Selection.selectionSplitOffsets();
-				var nodes = $(Selection.selectionNodes());
-				for (var i = 0; i < nodes.length; ++i) {
-					if (nodes[i].closest(this.$editor().find(element)).length === 0)
-						nodes[i] = nodes[i].wrap("<" + element + "></" + element + ">");
-				}
-				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
-			},
-
-			selectionRemoveParentElement : function(element) {
-				if (!this.isSelected())
-					return;
-				Selection.selectionSplitOffsets();
-				var nodes = $(Selection.selectionNodes());
-				for (var i = 0; i < nodes.length; ++i)
-					this.remove_tag_from_parent_path(nodes[i], element, this.$editor());
-				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
-			},
-
-			caretNode : function() {
-				return $(Selection.selectionStartNode());
-			},
-
-			caretHasParentElement : function(element) {
-				if (Types.is_defined(this.__caretElementStack[element]))
-					return this.__caretElementStack[element];
-				return this.caretNode().parents(this.$editor().find(element)).length > 0;
 			},
 
 			caretSetParentElement: function (element, value) {
@@ -217,19 +149,6 @@ Scoped.define("module:Richeditor", [
 					return;
 				this.__caretElementStack[element] = true;
 				this.trigger("element");
-			},
-			
-			__caretCharacterAdded: function () {
-				var yesTags = [];
-				var noTags = [];
-				Objs.iter(this.__caretElementStack, function (value, tag) { (value ? yesTags : noTags).push(tag); });
-				var node = $(Dom.splitNode(this.caretNode().get(0), this.caretNodeOffset() - 1, this.caretNodeOffset()));
-				var i = null;
-				for (i = 0; i < noTags.length; ++i)
-					this.remove_tag_from_parent_path(node, noTags[i], this.$editor());
-				for (i = 0; i < yesTags.length; ++i)
-					node = node.wrap("<" + yesTags[i] + "></" + yesTags[i] + ">");			
-				Selection.selectNode(node.get(0), 1);
 			},
 			
 			__caretClearElementStack: function () {
@@ -252,9 +171,81 @@ Scoped.define("module:Richeditor", [
 				return result;
 			},
 
+			hasFocus: function () {
+				return document.activeElement == this.editor() || $(document.activeElement).parents(this.editor()).length > 0;
+			},
+			
+			selectionAncestor: function () {
+				return $(Selection.selectionAncestor());
+			},
+			
+			selection: function () {
+				return $(Selection.selectionNodes());
+			},
+				
+			selectionLeaves: function () {
+				return $(Selection.selectionLeaves());
+			},
+
+			selectionHasParentElement : function(element) {
+				if (!this.isSelected())
+					return false;
+				if (this.selectionAncestor().parents($(this.editor()).find(element)).length > 0)
+					return true;
+				return Objs.all(this.selectionLeaves(), function (node) {
+					return node.closest($(this.editor()).find(element)).length > 0;
+				}, this);
+			},
+			
+			selectionAddParentElement : function (element) {
+				if (!this.isSelected())
+					return;
+				Selection.selectionSplitOffsets();
+				var nodes = $(Selection.selectionNodes());
+				for (var i = 0; i < nodes.length; ++i) {
+					if (nodes[i].closest($(this.editor()).find(element)).length === 0)
+						nodes[i] = nodes[i].wrap("<" + element + "></" + element + ">");
+				}
+				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
+			},
+
+			selectionRemoveParentElement : function(element) {
+				if (!this.isSelected())
+					return;
+				Selection.selectionSplitOffsets();
+				var nodes = $(Selection.selectionNodes());
+				for (var i = 0; i < nodes.length; ++i)
+					this.remove_tag_from_parent_path(nodes[i], element, this.editor());
+				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
+			},
+
+			caretNode : function() {
+				return $(Selection.selectionStartNode());
+			},
+
+			caretHasParentElement : function(element) {
+				if (Types.is_defined(this.__caretElementStack[element]))
+					return this.__caretElementStack[element];
+				return this.caretNode().parents($(this.editor()).find(element)).length > 0;
+			},
+
+			__caretCharacterAdded: function () {
+				var yesTags = [];
+				var noTags = [];
+				Objs.iter(this.__caretElementStack, function (value, tag) { (value ? yesTags : noTags).push(tag); });
+				var node = $(Dom.splitNode(this.caretNode().get(0), this.caretNodeOffset() - 1, this.caretNodeOffset()));
+				var i = null;
+				for (i = 0; i < noTags.length; ++i)
+					this.remove_tag_from_parent_path(node, noTags[i], this.editor());
+				for (i = 0; i < yesTags.length; ++i)
+					node = node.wrap("<" + yesTags[i] + "></" + yesTags[i] + ">");			
+				Selection.selectNode(node.get(0), 1);
+			},
+			
 			remove_tag_from_parent_path: function (node, tag, context) {	
 				tag = tag.toLowerCase();
 				node = $(node);
+				context = $(context);
 				var parents = node.parents(context ? context + " " + tag : tag);
 				for (var i = 0; i < parents.length; ++i) {
 					var parent = parents.get(i);
