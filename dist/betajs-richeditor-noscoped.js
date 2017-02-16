@@ -1,5 +1,5 @@
 /*!
-betajs-richeditor - v1.0.8 - 2017-02-14
+betajs-richeditor - v1.0.9 - 2017-02-15
 Copyright (c) Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -14,7 +14,7 @@ Scoped.binding('jquery', 'global:jQuery');
 Scoped.define("module:", function () {
 	return {
     "guid": "15a5c98c-e44a-cb29-7593-2577c3ce3753",
-    "version": "1.0.8"
+    "version": "1.0.9"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -171,29 +171,44 @@ Scoped.define("module:Richeditor", [
 				return result;
 			},
 
+			selectionAncestor: function () {
+				return Selection.selectionAncestor();
+			},
+			
+			selectionLeaves: function () {
+				return Selection.selectionLeaves();
+			},
+
+			selection: function () {
+				return Selection.selectionNodes();
+			},
+				
+			caretNode : function() {
+				return Selection.selectionStartNode();
+			},
+
+			selectionRemoveParentElement : function(element) {
+				if (!this.isSelected())
+					return;
+				Selection.selectionSplitOffsets();
+				var nodes = Selection.selectionNodes();
+				nodes.forEach(function (node) {
+					this.remove_tag_from_parent_path(node, element, this.editor());
+				}, this);
+				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
+			},
+
 			hasFocus: function () {
 				return document.activeElement == this.editor() || $(document.activeElement).parents(this.editor()).length > 0;
 			},
 			
-			selectionAncestor: function () {
-				return $(Selection.selectionAncestor());
-			},
-			
-			selection: function () {
-				return $(Selection.selectionNodes());
-			},
-				
-			selectionLeaves: function () {
-				return $(Selection.selectionLeaves());
-			},
-
 			selectionHasParentElement : function(element) {
 				if (!this.isSelected())
 					return false;
-				if (this.selectionAncestor().parents($(this.editor()).find(element)).length > 0)
+				if ($(this.selectionAncestor()).parents($(this.editor()).find(element)).length > 0)
 					return true;
 				return Objs.all(this.selectionLeaves(), function (node) {
-					return node.closest($(this.editor()).find(element)).length > 0;
+					return $(node).closest($(this.editor()).find(element)).length > 0;
 				}, this);
 			},
 			
@@ -209,37 +224,23 @@ Scoped.define("module:Richeditor", [
 				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
 			},
 
-			selectionRemoveParentElement : function(element) {
-				if (!this.isSelected())
-					return;
-				Selection.selectionSplitOffsets();
-				var nodes = $(Selection.selectionNodes());
-				for (var i = 0; i < nodes.length; ++i)
-					this.remove_tag_from_parent_path(nodes[i], element, this.editor());
-				Selection.selectRange(nodes[0], nodes[nodes.length - 1]);
-			},
-
-			caretNode : function() {
-				return $(Selection.selectionStartNode());
-			},
-
 			caretHasParentElement : function(element) {
 				if (Types.is_defined(this.__caretElementStack[element]))
 					return this.__caretElementStack[element];
-				return this.caretNode().parents($(this.editor()).find(element)).length > 0;
+				return $(this.caretNode()).parents($(this.editor()).find(element)).length > 0;
 			},
 
 			__caretCharacterAdded: function () {
 				var yesTags = [];
 				var noTags = [];
 				Objs.iter(this.__caretElementStack, function (value, tag) { (value ? yesTags : noTags).push(tag); });
-				var node = $(Dom.splitNode(this.caretNode().get(0), this.caretNodeOffset() - 1, this.caretNodeOffset()));
+				var node = Dom.splitNode(this.caretNode(), this.caretNodeOffset() - 1, this.caretNodeOffset());
 				var i = null;
 				for (i = 0; i < noTags.length; ++i)
 					this.remove_tag_from_parent_path(node, noTags[i], this.editor());
 				for (i = 0; i < yesTags.length; ++i)
-					node = node.wrap("<" + yesTags[i] + "></" + yesTags[i] + ">");			
-				Selection.selectNode(node.get(0), 1);
+					node = $(node).wrap("<" + yesTags[i] + "></" + yesTags[i] + ">").get(0);			
+				Selection.selectNode(node, 1);
 			},
 			
 			remove_tag_from_parent_path: function (node, tag, context) {	
