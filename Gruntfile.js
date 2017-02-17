@@ -12,8 +12,7 @@ module.exports = function(grunt) {
 		"module": "global:BetaJS.Dynamics.RichEditor",
 		"base": "global:BetaJS",
 		"browser": "global:BetaJS.Browser",
-		"dynamics": "global:BetaJS.Dynamics",
-		"jquery": "global:jQuery"
+		"dynamics": "global:BetaJS.Dynamics"
     }, {
     	"base:version": pkg.devDependencies.betajs,
     	"browser:version": pkg.devDependencies["betajs-browser"],
@@ -27,7 +26,7 @@ module.exports = function(grunt) {
     .packageTask()
 
     /* Testing */
-    .closureTask(null, [require.resolve("betajs-scoped"), require.resolve("betajs"), require.resolve("betajs-browser"), require.resolve("betajs-dynamics"), "./dist/betajs-richeditor-noscoped.js"], null, { jquery: true })
+    .closureTask(null, [require.resolve("betajs-scoped"), require.resolve("betajs"), require.resolve("betajs-browser"), require.resolve("betajs-dynamics"), "./dist/betajs-richeditor-noscoped.js"], null, { })
     .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js'])
     
     /* External Configurations */

@@ -1,4 +1,4 @@
-# betajs-richeditor 1.0.9
+# betajs-richeditor 1.0.10
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-richeditor/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-richeditor)
 [![NPM](https://img.shields.io/npm/v/betajs-richeditor.svg?style=flat)](https://www.npmjs.com/package/betajs-richeditor)
 [![Gitter Chat](https://badges.gitter.im/betajs/betajs-richeditor.svg)](https://gitter.im/betajs/betajs-richeditor)
