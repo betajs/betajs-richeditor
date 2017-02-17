@@ -1289,25 +1289,27 @@ Scoped.define("module:Richeditor", [
 
 			remove_tag_from_parent_path: function (node, tag, context) {	
 				tag = tag.toLowerCase();
+				var wrap = function (sibling) {
+					var element = document.createElement(tag);
+					Dom.elementInsertBefore(element, sibling);
+					element.appendChild(sibling);
+				};
+				var unwrap = function (unwrap) {
+					while (unwrap.childNodes.length > 0)
+						Dom.elementInsertBefore(unwrap.childNodes[0], unwrap);
+					unwrap.parentElement.removeChild(unwrap);
+				};
 				var current = node.parentElement;
 				while (current && current != this.editor() && current != context) {
 					if (current.tagName.toLowerCase() === tag) {
 						while (node != this.editor() && node && node != current) {
-							this.contentSiblings(node).forEach(function (sibling) {
-								var element = document.createElement(tag);
-								Dom.elementInsertBefore(element, sibling);
-								element.appendChild(sibling);
-							}, this);
+							this.contentSiblings(node).forEach(wrap);
 							node = node.parentElement;
 						}
 						var nodes = [];
 						for (var i = 0; i < current.childNodes.length; ++i)
 							nodes.push(current.childNodes[i]);
-						nodes.forEach(function (unwrap) {
-							while (unwrap.childNodes.length > 0)
-								Dom.elementInsertBefore(unwrap.childNodes[0], unwrap);
-							unwrap.parentElement.removeChild(unwrap);
-						}, this);
+						nodes.forEach(unwrap);
 					}
 					current = current.parentElement;
 				}
